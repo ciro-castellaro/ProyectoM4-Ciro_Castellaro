@@ -40,8 +40,23 @@ Completá el `.env` con tus propios valores (ver [Variables de entorno](#variabl
 
 ## Variables de entorno
 
-_Pendiente — se completará al configurar Firebase (Authentication y Firestore) y AWS SES /
-Vercel Functions._ Ver `.env.example` para la plantilla actualizada.
+| Variable                             | Descripción                                             |
+| ------------------------------------- | -------------------------------------------------------- |
+| `VITE_FIREBASE_API_KEY`               | Config pública del cliente Firebase (consola de Firebase → Configuración del proyecto → Tus apps). |
+| `VITE_FIREBASE_AUTH_DOMAIN`           | Dominio de autenticación del proyecto Firebase.           |
+| `VITE_FIREBASE_PROJECT_ID`            | ID del proyecto Firebase.                                 |
+| `VITE_FIREBASE_STORAGE_BUCKET`        | Bucket de Storage del proyecto Firebase.                  |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID`   | Sender ID de Firebase Cloud Messaging.                     |
+| `VITE_FIREBASE_APP_ID`                | ID de la app dentro del proyecto Firebase.                 |
+
+Las variables de AWS SES / Vercel Functions se agregarán al implementar el envío de emails. Ver
+`.env.example` para la plantilla actualizada.
+
+> Nota: los valores de Firebase de arriba son configuración pública del cliente (quedan visibles
+> en el bundle de JS), no secretos de servidor. Se mantienen en `.env` de todos modos como buena
+> práctica y para no acoplar el código a un proyecto de Firebase específico. La protección real de
+> los datos de cada usuario depende de las Reglas de Seguridad de Firestore, no de ocultar estos
+> valores.
 
 ## Arquitectura
 
