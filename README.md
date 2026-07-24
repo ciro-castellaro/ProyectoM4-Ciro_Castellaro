@@ -1,32 +1,58 @@
-# React + TypeScript + Vite
+# MateCode | Gestor de tareas
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicación web SPA de gestión de tareas para **MateCode**. Permite que empleados gestionen sus
+tareas diarias de forma organizada, persistente y accesible desde cualquier dispositivo.
 
-Currently, two official plugins are available:
+## Estado del proyecto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+En desarrollo incremental, por etapas.
 
-## React Compiler
+## Tecnologías
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Frontend: React + TypeScript (Vite)
+- Backend as a Service: Firebase Authentication y Cloud Firestore
+- Notificaciones por email: AWS SES, invocado desde una Vercel Function
+- Deploy: Vercel
+- Testing: Vitest y React Testing Library
 
-## Expanding the Oxlint configuration
+## Instalación
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+git clone https://github.com/ciro-castellaro/ProyectoM4-Ciro_Castellaro.git
+cd ProyectoM4-Ciro_Castellaro
+npm install
+cp .env.example .env
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Completá el `.env` con tus propios valores (ver [Variables de entorno](#variables-de-entorno)).
+
+## Scripts disponibles
+
+| Script            | Descripción                                      |
+| ------------------ | ------------------------------------------------- |
+| `npm run dev`      | Levanta el servidor de desarrollo (Vite).          |
+| `npm run build`    | Type-checks y genera el build de producción.       |
+| `npm run preview`  | Sirve localmente el build de producción.           |
+| `npm run lint`     | Corre el linter (`oxlint`).                        |
+
+## Variables de entorno
+
+_Pendiente — se completará al configurar Firebase (Authentication y Firestore) y AWS SES /
+Vercel Functions._ Ver `.env.example` para la plantilla actualizada.
+
+## Arquitectura
+
+_Pendiente — se documentará a medida que se agreguen las capas del proyecto._
+
+## Flujo de emails
+
+_Pendiente — se documentará al implementar el envío de emails._
+
+## Uso de IA en este proyecto
+
+_Pendiente — se documentará al finalizar el desarrollo. El detalle del proceso se registra en
+`LOGS M4/uso-de-IA.md`, fuera de este repositorio._
+
+## Deploy
+
+_Pendiente — URL de producción se agregará al desplegar la aplicación._
