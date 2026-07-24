@@ -28,26 +28,26 @@ Completá el `.env` con tus propios valores (ver [Variables de entorno](#variabl
 
 ## Scripts disponibles
 
-| Script            | Descripción                                      |
-| ------------------ | ------------------------------------------------- |
-| `npm run dev`      | Levanta el servidor de desarrollo (Vite).          |
-| `npm run build`    | Type-checks y genera el build de producción.       |
-| `npm run preview`  | Sirve localmente el build de producción.           |
-| `npm run lint`     | Corre el linter (`oxlint`).                        |
-| `npm run test`     | Corre la suite de tests una sola vez.              |
-| `npm run test:watch` | Corre los tests en modo interactivo (watch).      |
-| `npm run test:ui`  | Abre la interfaz visual de Vitest en el navegador. |
+| Script               | Descripción                                        |
+| -------------------- | -------------------------------------------------- |
+| `npm run dev`        | Levanta el servidor de desarrollo (Vite).          |
+| `npm run build`      | Type-checks y genera el build de producción.       |
+| `npm run preview`    | Sirve localmente el build de producción.           |
+| `npm run lint`       | Corre el linter (`oxlint`).                        |
+| `npm run test`       | Corre la suite de tests una sola vez.              |
+| `npm run test:watch` | Corre los tests en modo interactivo (watch).       |
+| `npm run test:ui`    | Abre la interfaz visual de Vitest en el navegador. |
 
 ## Variables de entorno
 
-| Variable                             | Descripción                                             |
-| ------------------------------------- | -------------------------------------------------------- |
-| `VITE_FIREBASE_API_KEY`               | Config pública del cliente Firebase (consola de Firebase → Configuración del proyecto → Tus apps). |
-| `VITE_FIREBASE_AUTH_DOMAIN`           | Dominio de autenticación del proyecto Firebase.           |
-| `VITE_FIREBASE_PROJECT_ID`            | ID del proyecto Firebase.                                 |
-| `VITE_FIREBASE_STORAGE_BUCKET`        | Bucket de Storage del proyecto Firebase.                  |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID`   | Sender ID de Firebase Cloud Messaging.                     |
-| `VITE_FIREBASE_APP_ID`                | ID de la app dentro del proyecto Firebase.                 |
+| Variable                            | Descripción                                                                                        |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `VITE_FIREBASE_API_KEY`             | Config pública del cliente Firebase (consola de Firebase → Configuración del proyecto → Tus apps). |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | Dominio de autenticación del proyecto Firebase.                                                    |
+| `VITE_FIREBASE_PROJECT_ID`          | ID del proyecto Firebase.                                                                          |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | Bucket de Storage del proyecto Firebase.                                                           |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Sender ID de Firebase Cloud Messaging.                                                             |
+| `VITE_FIREBASE_APP_ID`              | ID de la app dentro del proyecto Firebase.                                                         |
 
 Las variables de AWS SES / Vercel Functions se agregarán al implementar el envío de emails. Ver
 `.env.example` para la plantilla actualizada.

@@ -1,4 +1,4 @@
-import { initializeApp, type FirebaseOptions } from 'firebase/app'
+import { initializeApp, type FirebaseOptions } from "firebase/app";
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -7,17 +7,17 @@ const firebaseConfig: FirebaseOptions = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-}
+};
 
 const missingKeys = Object.entries(firebaseConfig)
   .filter(([, value]) => !value)
-  .map(([key]) => key)
+  .map(([key]) => key);
 
 if (missingKeys.length > 0) {
   throw new Error(
-    `Faltan variables de entorno de Firebase: ${missingKeys.join(', ')}. ` +
-      'Revisá tu archivo .env (ver .env.example).',
-  )
+    `Faltan variables de entorno de Firebase: ${missingKeys.join(", ")}. ` +
+      "Revisá tu archivo .env (ver .env.example).",
+  );
 }
 
-export const firebaseApp = initializeApp(firebaseConfig)
+export const firebaseApp = initializeApp(firebaseConfig);

@@ -1,7 +1,7 @@
-@import '@fontsource/inter/latin-400.css';
-@import '@fontsource/inter/latin-500.css';
-@import '@fontsource/inter/latin-600.css';
-@import '@fontsource/inter/latin-700.css';
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
 
 :root {
   /* Paleta futurista MateCode */
@@ -20,7 +20,7 @@
   --color-focus: #c58cff;
 
   /* Tipografía */
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
 
   /* Escala de espaciado (múltiplos de 4px) */
   --space-1: 4px;
