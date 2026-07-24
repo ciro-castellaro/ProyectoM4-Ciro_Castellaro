@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Reglas de seguridad de Cloud Firestore para MateCode Task Manager.
+//
+// Este archivo es la fuente de verdad de las reglas, pero no se aplica solo:
+// hay que copiar su contenido en la consola de Firebase
+// (Firestore Database > Reglas) o publicarlo con el CLI de Firebase.
+//
+// Objetivo: cada usuario autenticado solo puede leer, crear, editar o
+// eliminar sus propias tareas (nunca las de otro usuario), y nadie sin
+// autenticar puede acceder a ningún dato.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /tasks/{taskId} {
+      // Leer, editar y eliminar: solo si el documento ya existente
+      // (`resource.data`) pertenece al usuario autenticado que hace el pedido.
+      allow read, update, delete: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+
+      // Crear: solo si el `userId` que viene en el documento nuevo
+      // (`request.resource.data`) coincide con el usuario autenticado.
+      // Evita que alguien cree una tarea a nombre de otro usuario.
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}
