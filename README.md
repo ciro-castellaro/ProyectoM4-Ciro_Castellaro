@@ -34,6 +34,9 @@ Completá el `.env` con tus propios valores (ver [Variables de entorno](#variabl
 | `npm run build`    | Type-checks y genera el build de producción.       |
 | `npm run preview`  | Sirve localmente el build de producción.           |
 | `npm run lint`     | Corre el linter (`oxlint`).                        |
+| `npm run test`     | Corre la suite de tests una sola vez.              |
+| `npm run test:watch` | Corre los tests en modo interactivo (watch).      |
+| `npm run test:ui`  | Abre la interfaz visual de Vitest en el navegador. |
 
 ## Variables de entorno
 
