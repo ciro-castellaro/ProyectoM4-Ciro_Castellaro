@@ -3,7 +3,7 @@ function LoginPage() {
     <main>
       <h1>Iniciar sesión</h1>
     </main>
-  )
+  );
 }
 
-export default LoginPage
+export default LoginPage;

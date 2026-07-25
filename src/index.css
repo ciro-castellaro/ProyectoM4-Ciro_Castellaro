@@ -175,6 +175,11 @@ textarea:focus-visible {
   border-color: var(--color-focus);
 }
 
+input[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
 label {
   display: block;
   margin-bottom: var(--space-1);
@@ -189,6 +194,80 @@ label {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: var(--space-5);
+}
+
+.field {
+  margin-bottom: var(--space-4);
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin: var(--space-1) 0 0;
+}
+
+form button[type="submit"] {
+  width: 100%;
+}
+
+/* Pantallas de login/registro: una columna centrada en mobile, con un panel
+   decorativo al lado en pantallas medianas o grandes (sin competir con el
+   formulario, que sigue siendo el foco principal). */
+.auth-layout {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5) var(--space-4);
+}
+
+.auth-panel {
+  display: none;
+}
+
+.auth-content {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card {
+  width: 100%;
+}
+
+.auth-subtitle {
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.auth-switch {
+  margin: var(--space-4) 0 0;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .auth-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .auth-panel {
+    display: block;
+    min-height: 400px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background:
+      radial-gradient(
+        circle at 30% 30%,
+        rgba(0, 229, 255, 0.25),
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at 70% 70%,
+        rgba(155, 92, 255, 0.25),
+        transparent 55%
+      ),
+      var(--color-surface);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

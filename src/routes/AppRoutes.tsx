@@ -1,7 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import LoginPage from '../pages/LoginPage'
-import RegisterPage from '../pages/RegisterPage'
-import TasksPage from '../pages/TasksPage'
+import { Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "../pages/LoginPage";
+import RegisterPage from "../pages/RegisterPage";
+import TasksPage from "../pages/TasksPage";
 
 function AppRoutes() {
   return (
@@ -12,7 +12,7 @@ function AppRoutes() {
       <Route path="/tasks" element={<TasksPage />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default AppRoutes
+export default AppRoutes;
