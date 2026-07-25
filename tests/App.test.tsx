@@ -1,21 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import App from "../src/App";
 
 describe("App", () => {
-  it("muestra el encabezado MateCode", () => {
-    render(<App />);
+  it("redirige la raíz a la pantalla de inicio de sesión", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
 
     expect(
-      screen.getByRole("heading", { name: /matecode/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("muestra el botón de acción principal", () => {
-    render(<App />);
-
-    expect(
-      screen.getByRole("button", { name: /acción principal/i }),
+      screen.getByRole("heading", { name: /iniciar sesión/i }),
     ).toBeInTheDocument();
   });
 });
