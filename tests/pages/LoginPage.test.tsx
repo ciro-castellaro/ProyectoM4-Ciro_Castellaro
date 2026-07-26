@@ -52,6 +52,21 @@ describe("LoginPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("muestra la marca y el mensaje del panel lateral", () => {
+    renderLoginPage();
+
+    // "MateCode" aparece dos veces en el DOM: el wordmark compacto de mobile
+    // y el del panel de escritorio. jsdom no evalúa media queries, así que
+    // ambos existen en el árbol aunque en un navegador real solo se vea uno.
+    expect(screen.getAllByText("MateCode").length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByRole("heading", { name: /tus tareas.*en un solo lugar/is }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/organizá proyectos, completá tareas/i),
+    ).toBeInTheDocument();
+  });
+
   it("llama a loginWithEmail con los datos del formulario", async () => {
     vi.mocked(loginWithEmail).mockResolvedValue({
       ok: true,

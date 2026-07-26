@@ -1,5 +1,5 @@
 /* Pantallas de login/registro: una columna centrada en mobile, con un panel
-   decorativo al lado en pantallas medianas o grandes (sin competir con el
+   de marca al lado en pantallas medianas o grandes (sin competir con el
    formulario, que sigue siendo el foco principal). Estas clases se repiten
    igual en RegisterPage.css: no hay un componente de layout compartido entre
    ambas pantallas, así que cada una trae su propia copia. */
@@ -17,6 +17,54 @@
 .auth-content {
   width: 100%;
   max-width: 400px;
+}
+
+.auth-mobile-brand {
+  text-align: center;
+  margin-bottom: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  background-image:
+    radial-gradient(
+      circle at 25% 20%,
+      rgba(0, 229, 255, 0.22),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 80% 85%,
+      rgba(155, 92, 255, 0.18),
+      transparent 55%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(0, 229, 255, 0.08) 0,
+      rgba(0, 229, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      rgba(0, 229, 255, 0.05) 0,
+      rgba(0, 229, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 56px
+    );
+}
+
+.auth-mobile-brand-name {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+}
+
+.auth-mobile-brand-tagline {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
 }
 
 .auth-card {
@@ -40,22 +88,77 @@
     margin: 0 auto;
   }
 
+  /* A partir de acá el panel de marca completo (con headline y descripción)
+     ya es visible a la izquierda, así que el wordmark compacto de mobile
+     deja de ser necesario. */
+  .auth-mobile-brand {
+    display: none;
+  }
+
+  /* El panel va segundo en el HTML (el formulario, que es el contenido
+     principal, se lee primero), pero visualmente sigue apareciendo a la
+     izquierda gracias a `order`. */
   .auth-panel {
-    display: block;
+    order: -1;
+    display: flex;
+    align-items: center;
     min-height: 400px;
+    padding: var(--space-6);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
-    background:
+    background-color: var(--color-surface);
+    background-image:
       radial-gradient(
-        circle at 30% 30%,
+        circle at 25% 25%,
         rgba(0, 229, 255, 0.25),
         transparent 55%
       ),
       radial-gradient(
-        circle at 70% 70%,
-        rgba(155, 92, 255, 0.25),
+        circle at 75% 75%,
+        rgba(155, 92, 255, 0.22),
         transparent 55%
       ),
-      var(--color-surface);
+      repeating-linear-gradient(
+        135deg,
+        rgba(0, 229, 255, 0.08) 0,
+        rgba(0, 229, 255, 0.08) 1px,
+        transparent 1px,
+        transparent 48px
+      ),
+      repeating-linear-gradient(
+        45deg,
+        rgba(0, 229, 255, 0.05) 0,
+        rgba(0, 229, 255, 0.05) 1px,
+        transparent 1px,
+        transparent 64px
+      );
+  }
+
+  .auth-panel-content {
+    max-width: 340px;
+  }
+
+  .auth-panel-brand {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: var(--color-primary);
+    margin-bottom: var(--space-5);
+  }
+
+  .auth-panel-headline {
+    font-size: 2rem;
+    line-height: 1.25;
+    margin: 0 0 var(--space-3);
+  }
+
+  .auth-panel-accent {
+    color: var(--color-primary);
+  }
+
+  .auth-panel-description {
+    color: var(--color-text-secondary);
+    margin: 0;
   }
 }
