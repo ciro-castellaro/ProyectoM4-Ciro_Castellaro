@@ -3,10 +3,14 @@ import {
   validateTaskTitle,
   validateTaskDescription,
 } from "../../features/tasks/validateTask";
+import type { Result } from "../../types/result";
 import "./TodoForm.css";
 
 interface TodoFormProps {
-  onSubmit: (values: { title: string; description: string }) => void;
+  onSubmit: (values: {
+    title: string;
+    description: string;
+  }) => Promise<Result<unknown>>;
   onCancel: () => void;
   initialValues?: { title: string; description: string };
 }
@@ -22,8 +26,10 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
     initialValues?.description ?? "",
   );
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const titleResult = validateTaskTitle(title);
@@ -33,15 +39,24 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
       title: titleResult.ok ? undefined : titleResult.error,
       description: descriptionResult.ok ? undefined : descriptionResult.error,
     });
+    setSubmitError(null);
 
     if (!titleResult.ok || !descriptionResult.ok) {
       return;
     }
 
-    onSubmit({
+    setIsSubmitting(true);
+    const result = await onSubmit({
       title: titleResult.value,
       description: descriptionResult.value,
     });
+    setIsSubmitting(false);
+
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
+
     setTitle("");
     setDescription("");
   }
@@ -56,6 +71,7 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Ej: Comprar leche"
+          disabled={isSubmitting}
           aria-invalid={Boolean(errors.title)}
           aria-describedby={errors.title ? "todo-title-error" : undefined}
         />
@@ -73,6 +89,7 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           placeholder="Detalles opcionales de la tarea"
+          disabled={isSubmitting}
           aria-invalid={Boolean(errors.description)}
           aria-describedby={
             errors.description ? "todo-description-error" : undefined
@@ -85,11 +102,22 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
         )}
       </div>
 
+      {submitError && (
+        <p className="field-error" role="alert">
+          ⚠ {submitError}
+        </p>
+      )}
+
       <div className="todo-form-actions">
-        <button type="submit" className="primary">
-          Guardar tarea
+        <button type="submit" className="primary" disabled={isSubmitting}>
+          {isSubmitting ? "Guardando..." : "Guardar tarea"}
         </button>
-        <button type="button" className="secondary" onClick={onCancel}>
+        <button
+          type="button"
+          className="secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancelar
         </button>
       </div>

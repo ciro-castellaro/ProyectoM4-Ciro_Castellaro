@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Task } from "../../types/task";
 import type { AsyncState } from "../../types/async";
 import { useAuth } from "../../hooks/useAuth";
+import { createTask } from "../../services/firebase/tasks";
 import AppHeader from "../../components/AppHeader/AppHeader";
 import TodoForm from "../../components/TodoForm/TodoForm";
 import TodoList from "../../components/TodoList/TodoList";
@@ -20,23 +21,25 @@ function TasksPage() {
   const tasks = tasksState.data ?? [];
   const pendingCount = tasks.filter((task) => !task.completed).length;
 
-  function handleCreateTask(values: { title: string; description: string }) {
-    const now = new Date().toISOString();
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      userId: user?.uid ?? "",
-      title: values.title,
-      description: values.description,
-      completed: false,
-      createdAt: now,
-      updatedAt: now,
-    };
+  async function handleCreateTask(values: {
+    title: string;
+    description: string;
+  }) {
+    if (!user) {
+      return { ok: false, error: "Tenés que iniciar sesión para crear tareas." } as const;
+    }
 
-    setTasksState((prev) => ({
-      ...prev,
-      data: [newTask, ...(prev.data ?? [])],
-    }));
-    setIsCreating(false);
+    const result = await createTask(user.uid, values);
+
+    if (result.ok) {
+      setTasksState((prev) => ({
+        ...prev,
+        data: [result.value, ...(prev.data ?? [])],
+      }));
+      setIsCreating(false);
+    }
+
+    return result;
   }
 
   function handleToggleComplete(id: string) {
