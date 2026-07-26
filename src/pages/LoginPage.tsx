@@ -1,12 +1,18 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
+import { loginWithEmail } from "../services/firebase/auth";
 
 function LoginPage() {
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  function handleSubmit(values: { email: string; password: string }) {
-    setSubmittedEmail(values.email);
+  async function handleSubmit(values: { email: string; password: string }) {
+    const result = await loginWithEmail(values.email, values.password);
+
+    if (result.ok) {
+      navigate("/tasks", { replace: true });
+    }
+
+    return result;
   }
 
   return (
@@ -21,13 +27,6 @@ function LoginPage() {
           </p>
 
           <LoginForm onSubmit={handleSubmit} />
-
-          {submittedEmail && (
-            <p role="status">
-              ✓ Formulario válido para {submittedEmail}. La conexión con
-              Firebase se agrega en la próxima etapa.
-            </p>
-          )}
 
           <p className="auth-switch">
             ¿No tenés cuenta? <Link to="/register">Crear cuenta</Link>

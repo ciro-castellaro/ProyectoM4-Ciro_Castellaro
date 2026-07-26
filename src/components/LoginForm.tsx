@@ -3,9 +3,13 @@ import {
   validateEmail,
   validateLoginPassword,
 } from "../features/auth/validateAuth";
+import type { Result } from "../types/result";
 
 interface LoginFormProps {
-  onSubmit: (values: { email: string; password: string }) => void;
+  onSubmit: (values: {
+    email: string;
+    password: string;
+  }) => Promise<Result<unknown>>;
 }
 
 interface FormErrors {
@@ -17,8 +21,10 @@ function LoginForm({ onSubmit }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const emailResult = validateEmail(email);
@@ -28,9 +34,21 @@ function LoginForm({ onSubmit }: LoginFormProps) {
       email: emailResult.ok ? undefined : emailResult.error,
       password: passwordResult.ok ? undefined : passwordResult.error,
     });
+    setSubmitError(null);
 
-    if (emailResult.ok && passwordResult.ok) {
-      onSubmit({ email: emailResult.value, password: passwordResult.value });
+    if (!emailResult.ok || !passwordResult.ok) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await onSubmit({
+      email: emailResult.value,
+      password: passwordResult.value,
+    });
+    setIsSubmitting(false);
+
+    if (!result.ok) {
+      setSubmitError(result.error);
     }
   }
 
@@ -45,6 +63,7 @@ function LoginForm({ onSubmit }: LoginFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="tu@email.com"
+          disabled={isSubmitting}
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? "login-email-error" : undefined}
         />
@@ -64,6 +83,7 @@ function LoginForm({ onSubmit }: LoginFormProps) {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Tu contraseña"
+          disabled={isSubmitting}
           aria-invalid={Boolean(errors.password)}
           aria-describedby={
             errors.password ? "login-password-error" : undefined
@@ -76,8 +96,14 @@ function LoginForm({ onSubmit }: LoginFormProps) {
         )}
       </div>
 
-      <button type="submit" className="primary">
-        Iniciar sesión
+      {submitError && (
+        <p className="field-error" role="alert">
+          ⚠ {submitError}
+        </p>
+      )}
+
+      <button type="submit" className="primary" disabled={isSubmitting}>
+        {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
       </button>
     </form>
   );

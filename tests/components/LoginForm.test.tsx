@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LoginForm from "../../src/components/LoginForm";
+import type { Result } from "../../src/types/result";
 
 describe("LoginForm", () => {
   it("muestra los campos de email y contraseña", () => {
@@ -27,7 +28,7 @@ describe("LoginForm", () => {
   });
 
   it("acepta una contraseña corta (no aplica el mínimo de registro)", async () => {
-    const handleSubmit = vi.fn();
+    const handleSubmit = vi.fn().mockResolvedValue({ ok: true, value: undefined });
     render(<LoginForm onSubmit={handleSubmit} />);
 
     await userEvent.type(
@@ -46,7 +47,10 @@ describe("LoginForm", () => {
   });
 
   it("llama a onSubmit con los valores saneados cuando el formulario es válido", async () => {
-    const handleSubmit = vi.fn();
+    const handleSubmit = vi
+      .fn<(values: { email: string; password: string }) => Promise<Result<unknown>>>()
+      .mockResolvedValue({ ok: true, value: undefined });
+
     render(<LoginForm onSubmit={handleSubmit} />);
 
     await userEvent.type(
@@ -62,5 +66,53 @@ describe("LoginForm", () => {
       email: "usuario@matecode.com",
       password: "123456",
     });
+  });
+
+  it("muestra un mensaje de carga mientras se procesa el inicio de sesión", async () => {
+    let resolveSubmit!: (result: Result<unknown>) => void;
+    const handleSubmit = vi.fn(
+      () =>
+        new Promise<Result<unknown>>((resolve) => {
+          resolveSubmit = resolve;
+        }),
+    );
+
+    render(<LoginForm onSubmit={handleSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/email/i), "user@matecode.com");
+    await userEvent.type(screen.getByLabelText(/contraseña/i), "123456");
+
+    const user = userEvent.setup();
+    const clickPromise = user.click(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /iniciando sesión/i }),
+      ).toBeDisabled();
+    });
+
+    resolveSubmit({ ok: true, value: undefined });
+    await clickPromise;
+  });
+
+  it("muestra el error del servidor cuando el login falla", async () => {
+    const handleSubmit = vi.fn().mockResolvedValue({
+      ok: false,
+      error: "Email o contraseña incorrectos.",
+    });
+
+    render(<LoginForm onSubmit={handleSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/email/i), "user@matecode.com");
+    await userEvent.type(screen.getByLabelText(/contraseña/i), "wrong-pass");
+    await userEvent.click(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    );
+
+    expect(
+      await screen.findByText(/email o contraseña incorrectos/i),
+    ).toBeInTheDocument();
   });
 });
