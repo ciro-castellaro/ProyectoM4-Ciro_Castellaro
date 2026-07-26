@@ -1,64 +1,76 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import TasksPage from "../../src/pages/TasksPage";
-import { logout } from "../../src/services/firebase/auth";
+import { useAuth } from "../../src/hooks/useAuth";
+
+vi.mock("../../src/hooks/useAuth", () => ({
+  useAuth: vi.fn(),
+}));
 
 vi.mock("../../src/services/firebase/auth", () => ({
   logout: vi.fn(),
 }));
 
-function renderTasksPageWithLoginRoute() {
+function renderTasksPage() {
+  vi.mocked(useAuth).mockReturnValue({
+    status: "success",
+    data: { email: "usuario@matecode.com" } as never,
+    error: null,
+  });
+
   render(
-    <MemoryRouter initialEntries={["/tasks"]}>
-      <Routes>
-        <Route path="/tasks" element={<TasksPage />} />
-        <Route path="/login" element={<h1>Iniciar sesión</h1>} />
-      </Routes>
+    <MemoryRouter>
+      <TasksPage />
     </MemoryRouter>,
   );
 }
 
 describe("TasksPage", () => {
   beforeEach(() => {
-    vi.mocked(logout).mockReset();
+    vi.mocked(useAuth).mockReset();
   });
 
-  it("muestra el botón de cerrar sesión", () => {
-    renderTasksPageWithLoginRoute();
+  it("muestra el título, el contador de pendientes y el estado vacío", () => {
+    renderTasksPage();
 
     expect(
-      screen.getByRole("button", { name: /cerrar sesión/i }),
+      screen.getByRole("heading", { name: /mis tareas/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/0 tareas pendientes/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /todavía no tenés tareas/i }),
     ).toBeInTheDocument();
   });
 
-  it("redirige a /login cuando el logout es exitoso", async () => {
-    vi.mocked(logout).mockResolvedValue({ ok: true, value: undefined });
+  it("muestra el placeholder del formulario al hacer clic en 'Nueva tarea', y lo oculta al cancelar", async () => {
+    renderTasksPage();
 
-    renderTasksPageWithLoginRoute();
     await userEvent.click(
-      screen.getByRole("button", { name: /cerrar sesión/i }),
+      screen.getByRole("button", { name: /^nueva tarea$/i }),
     );
 
     expect(
-      await screen.findByRole("heading", { name: /iniciar sesión/i }),
+      screen.getByText(/el formulario para crear tareas se agrega/i),
     ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /cancelar/i }));
+
+    expect(
+      screen.queryByText(/el formulario para crear tareas se agrega/i),
+    ).not.toBeInTheDocument();
   });
 
-  it("muestra un error comprensible si el logout falla", async () => {
-    vi.mocked(logout).mockResolvedValue({
-      ok: false,
-      error: "Ocurrió un error inesperado. Intentá de nuevo.",
-    });
+  it("también abre el placeholder desde el botón del estado vacío", async () => {
+    renderTasksPage();
 
-    renderTasksPageWithLoginRoute();
     await userEvent.click(
-      screen.getByRole("button", { name: /cerrar sesión/i }),
+      screen.getByRole("button", { name: /crear mi primera tarea/i }),
     );
 
     expect(
-      await screen.findByText(/ocurrió un error inesperado/i),
+      screen.getByText(/el formulario para crear tareas se agrega/i),
     ).toBeInTheDocument();
   });
 });
