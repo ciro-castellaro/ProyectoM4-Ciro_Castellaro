@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
-import LoginForm from "../components/LoginForm";
-import { loginWithEmail } from "../services/firebase/auth";
+import LoginForm from "../../components/LoginForm/LoginForm";
+import { loginWithEmail } from "../../services/firebase/auth";
+import "./LoginPage.css";
 
 function LoginPage() {
   const navigate = useNavigate();

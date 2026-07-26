@@ -2,8 +2,9 @@ import { useState, type SubmitEvent } from "react";
 import {
   validateEmail,
   validateLoginPassword,
-} from "../features/auth/validateAuth";
-import type { Result } from "../types/result";
+} from "../../features/auth/validateAuth";
+import type { Result } from "../../types/result";
+import "./LoginForm.css";
 
 interface LoginFormProps {
   onSubmit: (values: {

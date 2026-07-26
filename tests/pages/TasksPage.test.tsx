@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import TasksPage from "../../src/pages/TasksPage";
+import TasksPage from "../../src/pages/TasksPage/TasksPage";
 import { useAuth } from "../../src/hooks/useAuth";
 
 vi.mock("../../src/hooks/useAuth", () => ({

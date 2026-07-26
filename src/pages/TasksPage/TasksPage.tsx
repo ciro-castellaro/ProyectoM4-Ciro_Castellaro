@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { Task } from "../types/task";
-import AppHeader from "../components/AppHeader";
-import TodoForm from "../components/TodoForm";
+import type { Task } from "../../types/task";
+import AppHeader from "../../components/AppHeader/AppHeader";
+import TodoForm from "../../components/TodoForm/TodoForm";
+import "./TasksPage.css";
 
 function TasksPage() {
   const [tasks] = useState<Task[]>([]);

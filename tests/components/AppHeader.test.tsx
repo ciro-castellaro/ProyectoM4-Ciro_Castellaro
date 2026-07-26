@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import AppHeader from "../../src/components/AppHeader";
+import AppHeader from "../../src/components/AppHeader/AppHeader";
 import { useAuth } from "../../src/hooks/useAuth";
 import { logout } from "../../src/services/firebase/auth";
 

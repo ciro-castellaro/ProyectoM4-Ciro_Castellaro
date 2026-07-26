@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "../pages/LoginPage";
-import RegisterPage from "../pages/RegisterPage";
-import TasksPage from "../pages/TasksPage";
-import ProtectedRoute from "./ProtectedRoute";
+import LoginPage from "../pages/LoginPage/LoginPage";
+import RegisterPage from "../pages/RegisterPage/RegisterPage";
+import TasksPage from "../pages/TasksPage/TasksPage";
+import ProtectedRoute from "./ProtectedRoute/ProtectedRoute";
 
 function AppRoutes() {
   return (

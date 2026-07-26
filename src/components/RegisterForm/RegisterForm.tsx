@@ -1,6 +1,10 @@
 import { useState, type SubmitEvent } from "react";
-import { validateEmail, validatePassword } from "../features/auth/validateAuth";
-import type { Result } from "../types/result";
+import {
+  validateEmail,
+  validatePassword,
+} from "../../features/auth/validateAuth";
+import type { Result } from "../../types/result";
+import "./RegisterForm.css";
 
 interface RegisterFormProps {
   onSubmit: (values: {

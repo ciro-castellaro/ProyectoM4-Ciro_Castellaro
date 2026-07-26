@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
-import RegisterForm from "../components/RegisterForm";
-import { registerWithEmail } from "../services/firebase/auth";
+import RegisterForm from "../../components/RegisterForm/RegisterForm";
+import { registerWithEmail } from "../../services/firebase/auth";
+import "./RegisterPage.css";
 
 function RegisterPage() {
   const navigate = useNavigate();

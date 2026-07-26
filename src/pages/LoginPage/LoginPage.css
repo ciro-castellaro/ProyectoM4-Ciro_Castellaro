@@ -1,0 +1,61 @@
+/* Pantallas de login/registro: una columna centrada en mobile, con un panel
+   decorativo al lado en pantallas medianas o grandes (sin competir con el
+   formulario, que sigue siendo el foco principal). Estas clases se repiten
+   igual en RegisterPage.css: no hay un componente de layout compartido entre
+   ambas pantallas, así que cada una trae su propia copia. */
+.auth-layout {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5) var(--space-4);
+}
+
+.auth-panel {
+  display: none;
+}
+
+.auth-content {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card {
+  width: 100%;
+}
+
+.auth-subtitle {
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.auth-switch {
+  margin: var(--space-4) 0 0;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .auth-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .auth-panel {
+    display: block;
+    min-height: 400px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background:
+      radial-gradient(
+        circle at 30% 30%,
+        rgba(0, 229, 255, 0.25),
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at 70% 70%,
+        rgba(155, 92, 255, 0.25),
+        transparent 55%
+      ),
+      var(--color-surface);
+  }
+}

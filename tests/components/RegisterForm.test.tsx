@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import RegisterForm from "../../src/components/RegisterForm";
+import RegisterForm from "../../src/components/RegisterForm/RegisterForm";
 import type { Result } from "../../src/types/result";
 
 describe("RegisterForm", () => {

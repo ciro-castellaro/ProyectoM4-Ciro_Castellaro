@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import { logout } from "../services/firebase/auth";
+import { useAuth } from "../../hooks/useAuth";
+import { logout } from "../../services/firebase/auth";
+import "./AppHeader.css";
 
 function AppHeader() {
   const navigate = useNavigate();
