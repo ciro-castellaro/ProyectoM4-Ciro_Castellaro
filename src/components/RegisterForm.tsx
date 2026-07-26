@@ -1,8 +1,12 @@
 import { useState, type SubmitEvent } from "react";
 import { validateEmail, validatePassword } from "../features/auth/validateAuth";
+import type { Result } from "../types/result";
 
 interface RegisterFormProps {
-  onSubmit: (values: { email: string; password: string }) => void;
+  onSubmit: (values: {
+    email: string;
+    password: string;
+  }) => Promise<Result<unknown>>;
 }
 
 interface FormErrors {
@@ -14,21 +18,34 @@ function RegisterForm({ onSubmit }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const emailResult = validateEmail(email);
     const passwordResult = validatePassword(password);
 
-    const nextErrors: FormErrors = {
+    setErrors({
       email: emailResult.ok ? undefined : emailResult.error,
       password: passwordResult.ok ? undefined : passwordResult.error,
-    };
-    setErrors(nextErrors);
+    });
+    setSubmitError(null);
 
-    if (emailResult.ok && passwordResult.ok) {
-      onSubmit({ email: emailResult.value, password: passwordResult.value });
+    if (!emailResult.ok || !passwordResult.ok) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await onSubmit({
+      email: emailResult.value,
+      password: passwordResult.value,
+    });
+    setIsSubmitting(false);
+
+    if (!result.ok) {
+      setSubmitError(result.error);
     }
   }
 
@@ -39,9 +56,11 @@ function RegisterForm({ onSubmit }: RegisterFormProps) {
         <input
           id="register-email"
           type="email"
+          autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="tu@email.com"
+          disabled={isSubmitting}
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? "register-email-error" : undefined}
         />
@@ -57,9 +76,11 @@ function RegisterForm({ onSubmit }: RegisterFormProps) {
         <input
           id="register-password"
           type="password"
+          autoComplete="new-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Mínimo 6 caracteres"
+          disabled={isSubmitting}
           aria-invalid={Boolean(errors.password)}
           aria-describedby={
             errors.password ? "register-password-error" : undefined
@@ -72,8 +93,14 @@ function RegisterForm({ onSubmit }: RegisterFormProps) {
         )}
       </div>
 
-      <button type="submit" className="primary">
-        Crear cuenta
+      {submitError && (
+        <p className="field-error" role="alert">
+          ⚠ {submitError}
+        </p>
+      )}
+
+      <button type="submit" className="primary" disabled={isSubmitting}>
+        {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
       </button>
     </form>
   );

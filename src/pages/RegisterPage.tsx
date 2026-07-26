@@ -1,12 +1,18 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RegisterForm from "../components/RegisterForm";
+import { registerWithEmail } from "../services/firebase/auth";
 
 function RegisterPage() {
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  function handleSubmit(values: { email: string; password: string }) {
-    setSubmittedEmail(values.email);
+  async function handleSubmit(values: { email: string; password: string }) {
+    const result = await registerWithEmail(values.email, values.password);
+
+    if (result.ok) {
+      navigate("/tasks", { replace: true });
+    }
+
+    return result;
   }
 
   return (
@@ -21,13 +27,6 @@ function RegisterPage() {
           </p>
 
           <RegisterForm onSubmit={handleSubmit} />
-
-          {submittedEmail && (
-            <p role="status">
-              ✓ Formulario válido para {submittedEmail}. La conexión con
-              Firebase se agrega en la próxima etapa.
-            </p>
-          )}
 
           <p className="auth-switch">
             ¿Ya tenés cuenta? <Link to="/login">Iniciar sesión</Link>

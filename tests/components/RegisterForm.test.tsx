@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RegisterForm from "../../src/components/RegisterForm";
+import type { Result } from "../../src/types/result";
 
 describe("RegisterForm", () => {
   it("muestra los campos de email y contraseña", () => {
@@ -27,7 +28,10 @@ describe("RegisterForm", () => {
   });
 
   it("llama a onSubmit con los valores saneados cuando el formulario es válido", async () => {
-    const handleSubmit = vi.fn();
+    const handleSubmit = vi
+      .fn<(values: { email: string; password: string }) => Promise<Result<unknown>>>()
+      .mockResolvedValue({ ok: true, value: undefined });
+
     render(<RegisterForm onSubmit={handleSubmit} />);
 
     await userEvent.type(
@@ -43,5 +47,53 @@ describe("RegisterForm", () => {
       email: "usuario@matecode.com",
       password: "123456",
     });
+  });
+
+  it("muestra un mensaje de carga mientras se procesa el registro", async () => {
+    let resolveSubmit!: (result: Result<unknown>) => void;
+    const handleSubmit = vi.fn(
+      () =>
+        new Promise<Result<unknown>>((resolve) => {
+          resolveSubmit = resolve;
+        }),
+    );
+
+    render(<RegisterForm onSubmit={handleSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/email/i), "user@matecode.com");
+    await userEvent.type(screen.getByLabelText(/contraseña/i), "123456");
+
+    const user = userEvent.setup();
+    const clickPromise = user.click(
+      screen.getByRole("button", { name: /crear cuenta/i }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /creando cuenta/i }),
+      ).toBeDisabled();
+    });
+
+    resolveSubmit({ ok: true, value: undefined });
+    await clickPromise;
+  });
+
+  it("muestra el error del servidor cuando el registro falla", async () => {
+    const handleSubmit = vi.fn().mockResolvedValue({
+      ok: false,
+      error: "Ya existe una cuenta registrada con este email.",
+    });
+
+    render(<RegisterForm onSubmit={handleSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/email/i), "user@matecode.com");
+    await userEvent.type(screen.getByLabelText(/contraseña/i), "123456");
+    await userEvent.click(
+      screen.getByRole("button", { name: /crear cuenta/i }),
+    );
+
+    expect(
+      await screen.findByText(/ya existe una cuenta registrada/i),
+    ).toBeInTheDocument();
   });
 });

@@ -25,6 +25,14 @@ describe("getAuthErrorMessage", () => {
     expect(new Set(messages).size).toBe(1);
   });
 
+  it("devuelve un mensaje específico cuando el proveedor de email/contraseña no está habilitado", () => {
+    const error = new FirebaseError("auth/operation-not-allowed", "msg");
+
+    expect(getAuthErrorMessage(error)).toBe(
+      "El inicio de sesión por email y contraseña no está habilitado para este proyecto.",
+    );
+  });
+
   it("devuelve un mensaje por defecto para un código de Firebase desconocido", () => {
     const error = new FirebaseError("auth/some-new-error-code", "msg");
 

@@ -13,6 +13,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   "auth/user-not-found": "Email o contraseña incorrectos.",
   "auth/wrong-password": "Email o contraseña incorrectos.",
   "auth/user-disabled": "Esta cuenta fue deshabilitada.",
+  "auth/operation-not-allowed":
+    "El inicio de sesión por email y contraseña no está habilitado para este proyecto.",
   "auth/too-many-requests":
     "Demasiados intentos. Esperá unos minutos y volvé a intentar.",
   "auth/network-request-failed":
