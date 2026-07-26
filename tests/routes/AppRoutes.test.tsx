@@ -1,9 +1,20 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AppRoutes from "../../src/routes/AppRoutes";
+import { useAuth } from "../../src/hooks/useAuth";
+
+vi.mock("../../src/hooks/useAuth", () => ({
+  useAuth: vi.fn(),
+}));
 
 function renderAt(path: string) {
+  vi.mocked(useAuth).mockReturnValue({
+    status: "success",
+    data: { uid: "user-1" } as never,
+    error: null,
+  });
+
   render(
     <MemoryRouter initialEntries={[path]}>
       <AppRoutes />
@@ -28,7 +39,7 @@ describe("AppRoutes", () => {
     ).toBeInTheDocument();
   });
 
-  it("muestra la pantalla de tareas en /tasks", () => {
+  it("muestra la pantalla de tareas en /tasks para un usuario autenticado", () => {
     renderAt("/tasks");
 
     expect(
