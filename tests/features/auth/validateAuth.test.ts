@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   validateEmail,
   validatePassword,
+  validateLoginPassword,
   PASSWORD_MIN_LENGTH,
 } from "../../../src/features/auth/validateAuth";
 
@@ -40,5 +41,20 @@ describe("validatePassword", () => {
     const password = "a".repeat(PASSWORD_MIN_LENGTH - 1);
 
     expect(validatePassword(password).ok).toBe(false);
+  });
+});
+
+describe("validateLoginPassword", () => {
+  it("acepta cualquier contraseña no vacía, incluso más corta que el mínimo de registro", () => {
+    const password = "a".repeat(PASSWORD_MIN_LENGTH - 1);
+
+    expect(validateLoginPassword(password)).toEqual({
+      ok: true,
+      value: password,
+    });
+  });
+
+  it("rechaza una contraseña vacía", () => {
+    expect(validateLoginPassword("").ok).toBe(false);
   });
 });
