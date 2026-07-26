@@ -70,4 +70,17 @@ describe("TodoForm", () => {
 
     expect(handleCancel).toHaveBeenCalledTimes(1);
   });
+
+  it("precarga los campos con initialValues, para reutilizarse en edición", () => {
+    render(
+      <TodoForm
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        initialValues={{ title: "Comprar leche", description: "1 litro" }}
+      />,
+    );
+
+    expect(screen.getByLabelText(/título/i)).toHaveValue("Comprar leche");
+    expect(screen.getByLabelText(/descripción/i)).toHaveValue("1 litro");
+  });
 });

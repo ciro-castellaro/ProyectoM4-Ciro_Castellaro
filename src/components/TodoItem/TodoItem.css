@@ -1,0 +1,76 @@
+.todo-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.todo-item-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* El checkbox también es un <input>, así que hay que anular explícitamente
+   los estilos base de input (ancho completo, borde, fondo, padding) que
+   están pensados para campos de texto, no para un checkbox nativo. */
+.todo-item-main input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  margin-top: 2px;
+  border: none;
+  background: none;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.todo-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.todo-item-title {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
+}
+
+.todo-item-description {
+  margin: 0 0 var(--space-2);
+}
+
+.todo-item-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.todo-item.completed .todo-item-title {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.todo-item.completed .todo-item-status {
+  color: var(--color-success);
+}
+
+.todo-item-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.todo-item-actions button {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .todo-item-actions {
+    justify-content: flex-end;
+  }
+
+  .todo-item-actions button {
+    width: auto;
+  }
+}

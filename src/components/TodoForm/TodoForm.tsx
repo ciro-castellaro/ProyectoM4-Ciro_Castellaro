@@ -8,6 +8,7 @@ import "./TodoForm.css";
 interface TodoFormProps {
   onSubmit: (values: { title: string; description: string }) => void;
   onCancel: () => void;
+  initialValues?: { title: string; description: string };
 }
 
 interface FormErrors {
@@ -15,9 +16,11 @@ interface FormErrors {
   description?: string;
 }
 
-function TodoForm({ onSubmit, onCancel }: TodoFormProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
+  const [title, setTitle] = useState(initialValues?.title ?? "");
+  const [description, setDescription] = useState(
+    initialValues?.description ?? "",
+  );
   const [errors, setErrors] = useState<FormErrors>({});
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
