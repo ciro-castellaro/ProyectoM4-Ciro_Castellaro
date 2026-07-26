@@ -1,12 +1,21 @@
 import { useState } from "react";
 import type { Task } from "../types/task";
 import AppHeader from "../components/AppHeader";
+import TodoForm from "../components/TodoForm";
 
 function TasksPage() {
   const [tasks] = useState<Task[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [lastCreatedTitle, setLastCreatedTitle] = useState<string | null>(
+    null,
+  );
 
   const pendingCount = tasks.filter((task) => !task.completed).length;
+
+  function handleCreateTask(values: { title: string; description: string }) {
+    setLastCreatedTitle(values.title);
+    setIsCreating(false);
+  }
 
   return (
     <>
@@ -32,17 +41,19 @@ function TasksPage() {
 
         {isCreating && (
           <section className="card">
-            <p role="status">
-              El formulario para crear tareas se agrega en la próxima etapa.
-            </p>
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => setIsCreating(false)}
-            >
-              Cancelar
-            </button>
+            <h2>Nueva tarea</h2>
+            <TodoForm
+              onSubmit={handleCreateTask}
+              onCancel={() => setIsCreating(false)}
+            />
           </section>
+        )}
+
+        {lastCreatedTitle && (
+          <p role="status">
+            ✓ "{lastCreatedTitle}" es una tarea válida. Guardarla y mostrarla
+            en la lista se agrega en las próximas etapas.
+          </p>
         )}
 
         {tasks.length === 0 && (

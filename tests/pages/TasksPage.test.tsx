@@ -44,33 +44,44 @@ describe("TasksPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("muestra el placeholder del formulario al hacer clic en 'Nueva tarea', y lo oculta al cancelar", async () => {
+  it("muestra el formulario al hacer clic en 'Nueva tarea', y lo oculta al cancelar", async () => {
     renderTasksPage();
 
     await userEvent.click(
       screen.getByRole("button", { name: /^nueva tarea$/i }),
     );
 
-    expect(
-      screen.getByText(/el formulario para crear tareas se agrega/i),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/título/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /cancelar/i }));
 
-    expect(
-      screen.queryByText(/el formulario para crear tareas se agrega/i),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/título/i)).not.toBeInTheDocument();
   });
 
-  it("también abre el placeholder desde el botón del estado vacío", async () => {
+  it("también abre el formulario desde el botón del estado vacío", async () => {
     renderTasksPage();
 
     await userEvent.click(
       screen.getByRole("button", { name: /crear mi primera tarea/i }),
     );
 
-    expect(
-      screen.getByText(/el formulario para crear tareas se agrega/i),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/título/i)).toBeInTheDocument();
+  });
+
+  it("muestra una confirmación y cierra el formulario al crear una tarea válida", async () => {
+    renderTasksPage();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /^nueva tarea$/i }),
+    );
+    await userEvent.type(screen.getByLabelText(/título/i), "Comprar leche");
+    await userEvent.click(
+      screen.getByRole("button", { name: /guardar tarea/i }),
+    );
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /comprar leche/i,
+    );
+    expect(screen.queryByLabelText(/título/i)).not.toBeInTheDocument();
   });
 });

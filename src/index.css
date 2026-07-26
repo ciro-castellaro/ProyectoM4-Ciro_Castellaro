@@ -310,6 +310,27 @@ form button[type="submit"] {
   width: 100%;
 }
 
+.todo-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.todo-form-actions button {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .todo-form-actions {
+    flex-direction: row;
+  }
+
+  .todo-form-actions button {
+    width: auto;
+    flex: 1;
+  }
+}
+
 /* Pantallas de login/registro: una columna centrada en mobile, con un panel
    decorativo al lado en pantallas medianas o grandes (sin competir con el
    formulario, que sigue siendo el foco principal). */
