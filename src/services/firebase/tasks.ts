@@ -1,5 +1,13 @@
-import { addDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { tasksCollection, taskFromDocument } from "./firestore";
+import {
+  addDoc,
+  getDocs,
+  query,
+  where,
+  doc,
+  updateDoc,
+  Timestamp,
+} from "firebase/firestore";
+import { db, tasksCollection, taskFromDocument, TASKS_COLLECTION } from "./firestore";
 import { getFirestoreErrorMessage } from "./firestoreErrors";
 import type { Task } from "../../types/task";
 import type { Result } from "../../types/result";
@@ -55,6 +63,26 @@ export async function getUserTasks(userId: string): Promise<Result<Task[]>> {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
     return { ok: true, value: tasks };
+  } catch (error) {
+    return { ok: false, error: getFirestoreErrorMessage(error) };
+  }
+}
+
+// Genérica a propósito: la usan tanto marcar como completada (Etapa 3.6,
+// pasando solo `completed`) como editar título/descripción (Etapa 3.7), sin
+// duplicar la misma llamada a Firestore en las dos etapas.
+export async function updateTask(
+  taskId: string,
+  changes: Partial<Pick<Task, "title" | "description" | "completed">>,
+): Promise<Result<void>> {
+  try {
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      ...changes,
+      updatedAt: Timestamp.now(),
+    });
+
+    return { ok: true, value: undefined };
   } catch (error) {
     return { ok: false, error: getFirestoreErrorMessage(error) };
   }

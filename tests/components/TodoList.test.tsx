@@ -32,7 +32,12 @@ describe("TodoList", () => {
     };
 
     render(
-      <TodoList tasksState={tasksState} editingTaskId={null} {...noopHandlers} />,
+      <TodoList
+        tasksState={tasksState}
+        editingTaskId={null}
+        pendingTaskId={null}
+        {...noopHandlers}
+      />,
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(/cargando/i);
@@ -46,7 +51,12 @@ describe("TodoList", () => {
     };
 
     render(
-      <TodoList tasksState={tasksState} editingTaskId={null} {...noopHandlers} />,
+      <TodoList
+        tasksState={tasksState}
+        editingTaskId={null}
+        pendingTaskId={null}
+        {...noopHandlers}
+      />,
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
@@ -62,7 +72,12 @@ describe("TodoList", () => {
     };
 
     render(
-      <TodoList tasksState={tasksState} editingTaskId={null} {...noopHandlers} />,
+      <TodoList
+        tasksState={tasksState}
+        editingTaskId={null}
+        pendingTaskId={null}
+        {...noopHandlers}
+      />,
     );
 
     expect(
@@ -78,7 +93,12 @@ describe("TodoList", () => {
     };
 
     render(
-      <TodoList tasksState={tasksState} editingTaskId={null} {...noopHandlers} />,
+      <TodoList
+        tasksState={tasksState}
+        editingTaskId={null}
+        pendingTaskId={null}
+        {...noopHandlers}
+      />,
     );
 
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();

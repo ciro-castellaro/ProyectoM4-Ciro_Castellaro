@@ -7,6 +7,7 @@ import { useAuth } from "../../src/hooks/useAuth";
 import {
   createTask as createTaskService,
   getUserTasks as getUserTasksService,
+  updateTask as updateTaskService,
 } from "../../src/services/firebase/tasks";
 import type { Task } from "../../src/types/task";
 
@@ -21,6 +22,7 @@ vi.mock("../../src/services/firebase/auth", () => ({
 vi.mock("../../src/services/firebase/tasks", () => ({
   createTask: vi.fn(),
   getUserTasks: vi.fn(),
+  updateTask: vi.fn(),
 }));
 
 // Simula una "base de datos" en memoria: crear agrega acá, y la consulta de
@@ -56,6 +58,13 @@ function renderTasksPage() {
     value: fakeTasksDb,
   }));
 
+  vi.mocked(updateTaskService).mockImplementation(async (taskId, changes) => {
+    fakeTasksDb = fakeTasksDb.map((task) =>
+      task.id === taskId ? { ...task, ...changes } : task,
+    );
+    return { ok: true, value: undefined };
+  });
+
   render(
     <MemoryRouter>
       <TasksPage />
@@ -79,6 +88,7 @@ describe("TasksPage", () => {
     vi.mocked(useAuth).mockReset();
     vi.mocked(createTaskService).mockReset();
     vi.mocked(getUserTasksService).mockReset();
+    vi.mocked(updateTaskService).mockReset();
   });
 
   afterEach(() => {
@@ -165,7 +175,7 @@ describe("TasksPage", () => {
     });
   });
 
-  it("vuelve a consultar Firestore y muestra la tarea creada", async () => {
+  it("agrega la tarea creada a la lista sin volver a consultar toda la colección", async () => {
     renderTasksPage();
     await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
 
@@ -174,7 +184,9 @@ describe("TasksPage", () => {
     expect(screen.queryByLabelText(/título/i)).not.toBeInTheDocument();
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();
     expect(screen.getByText(/1 tarea pendiente/i)).toBeInTheDocument();
-    expect(getUserTasksService).toHaveBeenCalledTimes(2);
+    // Solo la consulta inicial al montar: crear no debe disparar otra, para
+    // no repetir el parpadeo de "Cargando tareas..." por un solo documento.
+    expect(getUserTasksService).toHaveBeenCalledTimes(1);
   });
 
   it("muestra un error comprensible si Firestore rechaza la creación", async () => {
@@ -200,15 +212,37 @@ describe("TasksPage", () => {
     expect(screen.getByLabelText(/título/i)).toHaveValue("Comprar leche");
   });
 
-  it("marca una tarea como completada y actualiza el contador", async () => {
+  it("marca una tarea como completada en Firestore y actualiza el contador", async () => {
     renderTasksPage();
     await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
     await createTaskInUI("Comprar leche");
 
     await userEvent.click(screen.getByRole("checkbox"));
 
+    expect(updateTaskService).toHaveBeenCalledWith("mock-Comprar leche", {
+      completed: true,
+    });
+    expect(await screen.findByText(/✓ completada/i)).toBeInTheDocument();
     expect(screen.getByText(/0 tareas pendientes/i)).toBeInTheDocument();
-    expect(screen.getByText(/✓ completada/i)).toBeInTheDocument();
+    // Regresión: completar no debe volver a consultar toda la colección
+    // (eso causaba un parpadeo de "Cargando tareas..." por cada click).
+    expect(getUserTasksService).toHaveBeenCalledTimes(1);
+  });
+
+  it("muestra un error comprensible si Firestore rechaza el cambio de estado", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+    vi.mocked(updateTaskService).mockResolvedValue({
+      ok: false,
+      error: "No tenés permiso para realizar esta acción.",
+    });
+
+    await userEvent.click(screen.getByRole("checkbox"));
+
+    expect(
+      await screen.findByText(/no tenés permiso para realizar esta acción/i),
+    ).toBeInTheDocument();
   });
 
   it("edita una tarea existente", async () => {

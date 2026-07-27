@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { addDoc, getDocs, Timestamp } from "firebase/firestore";
+import { addDoc, getDocs, updateDoc, Timestamp } from "firebase/firestore";
 import { FirebaseError } from "firebase/app";
-import { createTask, getUserTasks } from "../../../src/services/firebase/tasks";
+import {
+  createTask,
+  getUserTasks,
+  updateTask,
+} from "../../../src/services/firebase/tasks";
 
 vi.mock("firebase/firestore", async (importOriginal) => {
   const actual = await importOriginal<typeof import("firebase/firestore")>();
@@ -9,6 +13,7 @@ vi.mock("firebase/firestore", async (importOriginal) => {
     ...actual,
     addDoc: vi.fn(),
     getDocs: vi.fn(),
+    updateDoc: vi.fn(),
   };
 });
 
@@ -121,6 +126,43 @@ describe("getUserTasks", () => {
     );
 
     const result = await getUserTasks("user-1");
+
+    expect(result).toEqual({
+      ok: false,
+      error: "No tenés permiso para realizar esta acción.",
+    });
+  });
+});
+
+describe("updateTask", () => {
+  beforeEach(() => {
+    vi.mocked(updateDoc).mockReset();
+  });
+
+  it("actualiza los campos indicados y siempre toca updatedAt", async () => {
+    vi.mocked(updateDoc).mockResolvedValue(undefined);
+
+    const result = await updateTask("task-1", { completed: true });
+
+    expect(result).toEqual({ ok: true, value: undefined });
+    expect(updateDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ completed: true }),
+    );
+    const [, changes] = vi.mocked(updateDoc).mock.calls[0];
+    expect(
+      (changes as unknown as Record<string, unknown>).updatedAt,
+    ).toBeInstanceOf(
+      Timestamp,
+    );
+  });
+
+  it("devuelve un error comprensible si Firestore rechaza la actualización", async () => {
+    vi.mocked(updateDoc).mockRejectedValue(
+      new FirebaseError("permission-denied", "msg"),
+    );
+
+    const result = await updateTask("task-1", { completed: true });
 
     expect(result).toEqual({
       ok: false,

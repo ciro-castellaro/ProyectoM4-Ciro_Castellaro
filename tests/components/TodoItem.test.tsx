@@ -24,6 +24,7 @@ describe("TodoItem", () => {
       <TodoItem
         task={baseTask}
         isEditing={false}
+        isTogglePending={false}
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
@@ -42,6 +43,7 @@ describe("TodoItem", () => {
       <TodoItem
         task={{ ...baseTask, completed: true }}
         isEditing={false}
+        isTogglePending={false}
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
@@ -60,6 +62,7 @@ describe("TodoItem", () => {
       <TodoItem
         task={baseTask}
         isEditing={false}
+        isTogglePending={false}
         onToggleComplete={handleToggle}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
@@ -73,12 +76,31 @@ describe("TodoItem", () => {
     expect(handleToggle).toHaveBeenCalledWith("task-1");
   });
 
+  it("deshabilita el checkbox y muestra 'Guardando...' mientras se persiste el cambio", () => {
+    render(
+      <TodoItem
+        task={baseTask}
+        isEditing={false}
+        isTogglePending
+        onToggleComplete={vi.fn()}
+        onDelete={vi.fn()}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("checkbox")).toBeDisabled();
+    expect(screen.getByText("Guardando...")).toBeInTheDocument();
+  });
+
   it("llama a onStartEdit al hacer clic en Editar", async () => {
     const handleStartEdit = vi.fn();
     render(
       <TodoItem
         task={baseTask}
         isEditing={false}
+        isTogglePending={false}
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={handleStartEdit}
@@ -99,6 +121,7 @@ describe("TodoItem", () => {
       <TodoItem
         task={baseTask}
         isEditing={false}
+        isTogglePending={false}
         onToggleComplete={vi.fn()}
         onDelete={handleDelete}
         onStartEdit={vi.fn()}
@@ -120,6 +143,7 @@ describe("TodoItem", () => {
       <TodoItem
         task={baseTask}
         isEditing={false}
+        isTogglePending={false}
         onToggleComplete={vi.fn()}
         onDelete={handleDelete}
         onStartEdit={vi.fn()}
@@ -139,6 +163,7 @@ describe("TodoItem", () => {
         <TodoItem
           task={baseTask}
           isEditing
+          isTogglePending={false}
           onToggleComplete={vi.fn()}
           onDelete={vi.fn()}
           onStartEdit={vi.fn()}
@@ -162,6 +187,7 @@ describe("TodoItem", () => {
       <TodoItem
         task={baseTask}
         isEditing
+        isTogglePending={false}
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
@@ -189,6 +215,7 @@ describe("TodoItem", () => {
       <TodoItem
         task={baseTask}
         isEditing
+        isTogglePending={false}
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}

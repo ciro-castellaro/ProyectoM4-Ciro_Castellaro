@@ -6,6 +6,7 @@ import "./TodoList.css";
 interface TodoListProps {
   tasksState: AsyncState<Task[]>;
   editingTaskId: string | null;
+  pendingTaskId: string | null;
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onStartEdit: (id: string) => void;
@@ -20,6 +21,7 @@ interface TodoListProps {
 function TodoList({
   tasksState,
   editingTaskId,
+  pendingTaskId,
   onToggleComplete,
   onDelete,
   onStartEdit,
@@ -69,6 +71,7 @@ function TodoList({
           key={task.id}
           task={task}
           isEditing={editingTaskId === task.id}
+          isTogglePending={pendingTaskId === task.id}
           onToggleComplete={onToggleComplete}
           onDelete={onDelete}
           onStartEdit={onStartEdit}

@@ -5,6 +5,7 @@ import "./TodoItem.css";
 interface TodoItemProps {
   task: Task;
   isEditing: boolean;
+  isTogglePending: boolean;
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onStartEdit: (id: string) => void;
@@ -18,6 +19,7 @@ interface TodoItemProps {
 function TodoItem({
   task,
   isEditing,
+  isTogglePending,
   onToggleComplete,
   onDelete,
   onStartEdit,
@@ -56,6 +58,7 @@ function TodoItem({
         <input
           type="checkbox"
           checked={task.completed}
+          disabled={isTogglePending}
           onChange={() => onToggleComplete(task.id)}
           aria-label={
             task.completed
@@ -70,7 +73,11 @@ function TodoItem({
             <p className="todo-item-description">{task.description}</p>
           )}
           <p className="todo-item-status">
-            {task.completed ? "✓ Completada" : "Pendiente"}
+            {isTogglePending
+              ? "Guardando..."
+              : task.completed
+                ? "✓ Completada"
+                : "Pendiente"}
           </p>
         </div>
       </div>
