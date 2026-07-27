@@ -1,5 +1,6 @@
 import type { Task } from "../../types/task";
 import type { AsyncState } from "../../types/async";
+import type { Result } from "../../types/result";
 import TodoItem from "../TodoItem/TodoItem";
 import "./TodoList.css";
 
@@ -13,7 +14,7 @@ interface TodoListProps {
   onSaveEdit: (
     id: string,
     values: { title: string; description: string },
-  ) => void;
+  ) => Promise<Result<unknown>>;
   onCancelEdit: () => void;
   onCreateFirst: () => void;
 }

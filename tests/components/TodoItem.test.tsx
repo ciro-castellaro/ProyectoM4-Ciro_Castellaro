@@ -28,7 +28,7 @@ describe("TodoItem", () => {
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
       />,
     );
@@ -47,7 +47,7 @@ describe("TodoItem", () => {
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
       />,
     );
@@ -66,7 +66,7 @@ describe("TodoItem", () => {
         onToggleComplete={handleToggle}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
       />,
     );
@@ -85,7 +85,7 @@ describe("TodoItem", () => {
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
       />,
     );
@@ -104,7 +104,7 @@ describe("TodoItem", () => {
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={handleStartEdit}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
       />,
     );
@@ -125,7 +125,7 @@ describe("TodoItem", () => {
         onToggleComplete={vi.fn()}
         onDelete={handleDelete}
         onStartEdit={vi.fn()}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
       />,
     );
@@ -147,7 +147,7 @@ describe("TodoItem", () => {
         onToggleComplete={vi.fn()}
         onDelete={handleDelete}
         onStartEdit={vi.fn()}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
       />,
     );
@@ -167,7 +167,7 @@ describe("TodoItem", () => {
           onToggleComplete={vi.fn()}
           onDelete={vi.fn()}
           onStartEdit={vi.fn()}
-          onSaveEdit={vi.fn()}
+          onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
           onCancelEdit={vi.fn()}
         />,
       );
@@ -182,7 +182,7 @@ describe("TodoItem", () => {
   });
 
   it("llama a onSaveEdit con los nuevos valores al guardar en modo edición", async () => {
-    const handleSaveEdit = vi.fn();
+    const handleSaveEdit = vi.fn().mockResolvedValue({ ok: true, value: undefined });
     render(
       <TodoItem
         task={baseTask}
@@ -219,7 +219,7 @@ describe("TodoItem", () => {
         onToggleComplete={vi.fn()}
         onDelete={vi.fn()}
         onStartEdit={vi.fn()}
-        onSaveEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={handleCancelEdit}
       />,
     );

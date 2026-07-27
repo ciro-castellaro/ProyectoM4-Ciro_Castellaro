@@ -1,5 +1,6 @@
 import TodoForm from "../TodoForm/TodoForm";
 import type { Task } from "../../types/task";
+import type { Result } from "../../types/result";
 import "./TodoItem.css";
 
 interface TodoItemProps {
@@ -12,7 +13,7 @@ interface TodoItemProps {
   onSaveEdit: (
     id: string,
     values: { title: string; description: string },
-  ) => void;
+  ) => Promise<Result<unknown>>;
   onCancelEdit: () => void;
 }
 
@@ -38,14 +39,7 @@ function TodoItem({
         <h2>Editando tarea</h2>
         <TodoForm
           initialValues={{ title: task.title, description: task.description }}
-          onSubmit={async (values) => {
-            // Todavía sin Firestore: la edición se guarda solo en memoria
-            // hasta que la Etapa 3.7 conecte la persistencia real. Se
-            // envuelve en una promesa para cumplir el mismo contrato async
-            // que ya usa la creación.
-            onSaveEdit(task.id, values);
-            return { ok: true, value: undefined };
-          }}
+          onSubmit={(values) => onSaveEdit(task.id, values)}
           onCancel={onCancelEdit}
         />
       </li>

@@ -245,7 +245,7 @@ describe("TasksPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("edita una tarea existente", async () => {
+  it("edita una tarea existente en Firestore", async () => {
     renderTasksPage();
     await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
     await createTaskInUI("Comprar leche");
@@ -259,8 +259,35 @@ describe("TasksPage", () => {
       screen.getByRole("button", { name: /guardar tarea/i }),
     );
 
-    expect(screen.getByText("Comprar pan")).toBeInTheDocument();
+    expect(updateTaskService).toHaveBeenCalledWith("mock-Comprar leche", {
+      title: "Comprar pan",
+      description: "",
+    });
+    expect(await screen.findByText("Comprar pan")).toBeInTheDocument();
     expect(screen.queryByText("Comprar leche")).not.toBeInTheDocument();
+    // Mismo criterio que crear/completar: no debe releer toda la colección.
+    expect(getUserTasksService).toHaveBeenCalledTimes(1);
+  });
+
+  it("muestra un error comprensible y mantiene el formulario abierto si falla la edición", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+    vi.mocked(updateTaskService).mockResolvedValue({
+      ok: false,
+      error: "No tenés permiso para realizar esta acción.",
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /editar/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /guardar tarea/i }),
+    );
+
+    expect(
+      await screen.findByText(/no tenés permiso para realizar esta acción/i),
+    ).toBeInTheDocument();
+    // Sigue en modo edición: no se perdió el trabajo del usuario.
+    expect(screen.getByLabelText(/título/i)).toHaveValue("Comprar leche");
   });
 
   it("elimina una tarea al confirmar, y vuelve a mostrar el estado vacío", async () => {

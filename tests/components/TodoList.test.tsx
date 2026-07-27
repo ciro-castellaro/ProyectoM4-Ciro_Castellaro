@@ -18,7 +18,7 @@ const noopHandlers = {
   onToggleComplete: vi.fn(),
   onDelete: vi.fn(),
   onStartEdit: vi.fn(),
-  onSaveEdit: vi.fn(),
+  onSaveEdit: vi.fn().mockResolvedValue({ ok: true, value: undefined }),
   onCancelEdit: vi.fn(),
   onCreateFirst: vi.fn(),
 };

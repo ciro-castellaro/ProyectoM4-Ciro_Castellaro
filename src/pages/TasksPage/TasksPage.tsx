@@ -84,24 +84,35 @@ function TasksPage() {
     }));
   }
 
-  function handleSaveEdit(
+  async function handleSaveEdit(
     id: string,
     values: { title: string; description: string },
   ) {
-    setTasksState((prev) => ({
-      ...prev,
-      data: (prev.data ?? []).map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              title: values.title,
-              description: values.description,
-              updatedAt: new Date().toISOString(),
-            }
-          : task,
-      ),
-    }));
-    setEditingTaskId(null);
+    const result = await updateTask(id, {
+      title: values.title,
+      description: values.description,
+    });
+
+    if (result.ok) {
+      // Mismo patrón que crear/completar: parchear localmente lo que ya
+      // sabemos que cambió, sin releer toda la colección.
+      setTasksState((prev) => ({
+        ...prev,
+        data: (prev.data ?? []).map((task) =>
+          task.id === id
+            ? {
+                ...task,
+                title: values.title,
+                description: values.description,
+                updatedAt: new Date().toISOString(),
+              }
+            : task,
+        ),
+      }));
+      setEditingTaskId(null);
+    }
+
+    return result;
   }
 
   return (
