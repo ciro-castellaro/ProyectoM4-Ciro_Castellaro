@@ -1,7 +1,6 @@
 import { useState } from "react";
-import type { Task } from "../../types/task";
-import type { AsyncState } from "../../types/async";
 import { useAuth } from "../../hooks/useAuth";
+import { useTasks } from "../../hooks/useTasks";
 import { createTask } from "../../services/firebase/tasks";
 import AppHeader from "../../components/AppHeader/AppHeader";
 import TodoForm from "../../components/TodoForm/TodoForm";
@@ -10,11 +9,7 @@ import "./TasksPage.css";
 
 function TasksPage() {
   const { data: user } = useAuth();
-  const [tasksState, setTasksState] = useState<AsyncState<Task[]>>({
-    status: "success",
-    data: [],
-    error: null,
-  });
+  const { tasksState, setTasksState, refetch } = useTasks(user?.uid);
   const [isCreating, setIsCreating] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
@@ -26,17 +21,17 @@ function TasksPage() {
     description: string;
   }) {
     if (!user) {
-      return { ok: false, error: "Tenés que iniciar sesión para crear tareas." } as const;
+      return {
+        ok: false,
+        error: "Tenés que iniciar sesión para crear tareas.",
+      } as const;
     }
 
     const result = await createTask(user.uid, values);
 
     if (result.ok) {
-      setTasksState((prev) => ({
-        ...prev,
-        data: [result.value, ...(prev.data ?? [])],
-      }));
       setIsCreating(false);
+      refetch();
     }
 
     return result;

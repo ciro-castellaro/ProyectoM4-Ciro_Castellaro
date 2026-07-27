@@ -4,7 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import TasksPage from "../../src/pages/TasksPage/TasksPage";
 import { useAuth } from "../../src/hooks/useAuth";
-import { createTask as createTaskService } from "../../src/services/firebase/tasks";
+import {
+  createTask as createTaskService,
+  getUserTasks as getUserTasksService,
+} from "../../src/services/firebase/tasks";
+import type { Task } from "../../src/types/task";
 
 vi.mock("../../src/hooks/useAuth", () => ({
   useAuth: vi.fn(),
@@ -16,18 +20,25 @@ vi.mock("../../src/services/firebase/auth", () => ({
 
 vi.mock("../../src/services/firebase/tasks", () => ({
   createTask: vi.fn(),
+  getUserTasks: vi.fn(),
 }));
 
+// Simula una "base de datos" en memoria: crear agrega acá, y la consulta de
+// listado (que dispara handleCreateTask via refetch) lee de acá. Así los
+// tests reflejan el flujo real: crear -> refetch -> aparece en la lista.
+let fakeTasksDb: Task[] = [];
+
 function renderTasksPage() {
+  fakeTasksDb = [];
+
   vi.mocked(useAuth).mockReturnValue({
     status: "success",
     data: { uid: "user-1", email: "usuario@matecode.com" } as never,
     error: null,
   });
 
-  vi.mocked(createTaskService).mockImplementation(async (userId, values) => ({
-    ok: true,
-    value: {
+  vi.mocked(createTaskService).mockImplementation(async (userId, values) => {
+    const newTask: Task = {
       id: `mock-${values.title}`,
       userId,
       title: values.title,
@@ -35,7 +46,14 @@ function renderTasksPage() {
       completed: false,
       createdAt: "2026-01-10T12:00:00.000Z",
       updatedAt: "2026-01-10T12:00:00.000Z",
-    },
+    };
+    fakeTasksDb = [newTask, ...fakeTasksDb];
+    return { ok: true, value: newTask };
+  });
+
+  vi.mocked(getUserTasksService).mockImplementation(async () => ({
+    ok: true,
+    value: fakeTasksDb,
   }));
 
   render(
@@ -60,26 +78,58 @@ describe("TasksPage", () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReset();
     vi.mocked(createTaskService).mockReset();
+    vi.mocked(getUserTasksService).mockReset();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("muestra el título, el contador de pendientes y el estado vacío", () => {
+  it("muestra el título, el contador de pendientes y el estado vacío", async () => {
     renderTasksPage();
 
     expect(
       screen.getByRole("heading", { name: /mis tareas/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/0 tareas pendientes/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /todavía no tenés tareas/i }),
+      await screen.findByRole("heading", { name: /todavía no tenés tareas/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/0 tareas pendientes/i)).toBeInTheDocument();
+  });
+
+  it("consulta las tareas del usuario logueado al cargar la pantalla", async () => {
+    renderTasksPage();
+
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+
+    expect(getUserTasksService).toHaveBeenCalledWith("user-1");
+  });
+
+  it("muestra un error comprensible si Firestore rechaza la consulta", async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      status: "success",
+      data: { uid: "user-1", email: "usuario@matecode.com" } as never,
+      error: null,
+    });
+    vi.mocked(getUserTasksService).mockResolvedValue({
+      ok: false,
+      error: "No tenés permiso para realizar esta acción.",
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText(/no tenés permiso para realizar esta acción/i),
     ).toBeInTheDocument();
   });
 
   it("muestra el formulario al hacer clic en 'Nueva tarea', y lo oculta al cancelar", async () => {
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
 
     await userEvent.click(
       screen.getByRole("button", { name: /^nueva tarea$/i }),
@@ -94,6 +144,7 @@ describe("TasksPage", () => {
 
   it("también abre el formulario desde el botón del estado vacío", async () => {
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
 
     await userEvent.click(
       screen.getByRole("button", { name: /crear mi primera tarea/i }),
@@ -104,6 +155,7 @@ describe("TasksPage", () => {
 
   it("llama a createTask con el userId del usuario logueado", async () => {
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
 
     await createTaskInUI("Comprar leche");
 
@@ -113,18 +165,21 @@ describe("TasksPage", () => {
     });
   });
 
-  it("agrega la tarea a la lista y actualiza el contador al crearla", async () => {
+  it("vuelve a consultar Firestore y muestra la tarea creada", async () => {
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
 
     await createTaskInUI("Comprar leche");
 
     expect(screen.queryByLabelText(/título/i)).not.toBeInTheDocument();
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();
     expect(screen.getByText(/1 tarea pendiente/i)).toBeInTheDocument();
+    expect(getUserTasksService).toHaveBeenCalledTimes(2);
   });
 
   it("muestra un error comprensible si Firestore rechaza la creación", async () => {
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
     vi.mocked(createTaskService).mockResolvedValue({
       ok: false,
       error: "No tenés permiso para realizar esta acción.",
@@ -147,6 +202,7 @@ describe("TasksPage", () => {
 
   it("marca una tarea como completada y actualiza el contador", async () => {
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
     await createTaskInUI("Comprar leche");
 
     await userEvent.click(screen.getByRole("checkbox"));
@@ -157,6 +213,7 @@ describe("TasksPage", () => {
 
   it("edita una tarea existente", async () => {
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
     await createTaskInUI("Comprar leche");
 
     await userEvent.click(screen.getByRole("button", { name: /editar/i }));
@@ -175,6 +232,7 @@ describe("TasksPage", () => {
   it("elimina una tarea al confirmar, y vuelve a mostrar el estado vacío", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
     renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
     await createTaskInUI("Comprar leche");
 
     await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));

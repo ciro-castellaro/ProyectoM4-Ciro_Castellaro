@@ -1,5 +1,5 @@
-import { addDoc, Timestamp } from "firebase/firestore";
-import { tasksCollection } from "./firestore";
+import { addDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
+import { tasksCollection, taskFromDocument } from "./firestore";
 import { getFirestoreErrorMessage } from "./firestoreErrors";
 import type { Task } from "../../types/task";
 import type { Result } from "../../types/result";
@@ -31,6 +31,30 @@ export async function createTask(
         updatedAt: now.toDate().toISOString(),
       },
     };
+  } catch (error) {
+    return { ok: false, error: getFirestoreErrorMessage(error) };
+  }
+}
+
+export async function getUserTasks(userId: string): Promise<Result<Task[]>> {
+  try {
+    // El `where` es obligatorio: las reglas de seguridad solo permiten un
+    // `list` cuyo resultado se pueda verificar de antemano como "todas las
+    // tareas de este usuario". Sin este filtro, Firestore rechaza la
+    // consulta completa (no evalúa documento por documento en un `list`).
+    const userTasksQuery = query(
+      tasksCollection,
+      where("userId", "==", userId),
+    );
+    const snapshot = await getDocs(userTasksQuery);
+
+    // Se ordena en el cliente (más reciente primero) para no depender de un
+    // índice compuesto de Firestore solo para esto.
+    const tasks = snapshot.docs
+      .map((doc) => taskFromDocument(doc))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    return { ok: true, value: tasks };
   } catch (error) {
     return { ok: false, error: getFirestoreErrorMessage(error) };
   }
