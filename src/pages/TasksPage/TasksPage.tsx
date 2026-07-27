@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useTasks } from "../../hooks/useTasks";
-import { createTask, updateTask } from "../../services/firebase/tasks";
+import {
+  createTask,
+  updateTask,
+  deleteTask,
+} from "../../services/firebase/tasks";
 import AppHeader from "../../components/AppHeader/AppHeader";
 import TodoForm from "../../components/TodoForm/TodoForm";
 import TodoList from "../../components/TodoList/TodoList";
@@ -77,11 +81,17 @@ function TasksPage() {
     }
   }
 
-  function handleDeleteTask(id: string) {
-    setTasksState((prev) => ({
-      ...prev,
-      data: (prev.data ?? []).filter((task) => task.id !== id),
-    }));
+  async function handleDeleteTask(id: string) {
+    const result = await deleteTask(id);
+
+    if (result.ok) {
+      setTasksState((prev) => ({
+        ...prev,
+        data: (prev.data ?? []).filter((task) => task.id !== id),
+      }));
+    }
+
+    return result;
   }
 
   async function handleSaveEdit(

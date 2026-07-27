@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { addDoc, getDocs, updateDoc, Timestamp } from "firebase/firestore";
+import { addDoc, getDocs, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { FirebaseError } from "firebase/app";
 import {
   createTask,
   getUserTasks,
   updateTask,
+  deleteTask,
 } from "../../../src/services/firebase/tasks";
 
 vi.mock("firebase/firestore", async (importOriginal) => {
@@ -14,6 +15,7 @@ vi.mock("firebase/firestore", async (importOriginal) => {
     addDoc: vi.fn(),
     getDocs: vi.fn(),
     updateDoc: vi.fn(),
+    deleteDoc: vi.fn(),
   };
 });
 
@@ -163,6 +165,34 @@ describe("updateTask", () => {
     );
 
     const result = await updateTask("task-1", { completed: true });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "No tenés permiso para realizar esta acción.",
+    });
+  });
+});
+
+describe("deleteTask", () => {
+  beforeEach(() => {
+    vi.mocked(deleteDoc).mockReset();
+  });
+
+  it("elimina el documento en Firestore", async () => {
+    vi.mocked(deleteDoc).mockResolvedValue(undefined);
+
+    const result = await deleteTask("task-1");
+
+    expect(result).toEqual({ ok: true, value: undefined });
+    expect(deleteDoc).toHaveBeenCalledWith(expect.anything());
+  });
+
+  it("devuelve un error comprensible si Firestore rechaza la eliminación", async () => {
+    vi.mocked(deleteDoc).mockRejectedValue(
+      new FirebaseError("permission-denied", "msg"),
+    );
+
+    const result = await deleteTask("task-1");
 
     expect(result).toEqual({
       ok: false,

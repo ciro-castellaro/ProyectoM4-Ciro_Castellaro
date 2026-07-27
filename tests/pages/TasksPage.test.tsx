@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import TasksPage from "../../src/pages/TasksPage/TasksPage";
@@ -8,6 +8,7 @@ import {
   createTask as createTaskService,
   getUserTasks as getUserTasksService,
   updateTask as updateTaskService,
+  deleteTask as deleteTaskService,
 } from "../../src/services/firebase/tasks";
 import type { Task } from "../../src/types/task";
 
@@ -23,6 +24,7 @@ vi.mock("../../src/services/firebase/tasks", () => ({
   createTask: vi.fn(),
   getUserTasks: vi.fn(),
   updateTask: vi.fn(),
+  deleteTask: vi.fn(),
 }));
 
 // Simula una "base de datos" en memoria: crear agrega acá, y la consulta de
@@ -65,6 +67,11 @@ function renderTasksPage() {
     return { ok: true, value: undefined };
   });
 
+  vi.mocked(deleteTaskService).mockImplementation(async (taskId) => {
+    fakeTasksDb = fakeTasksDb.filter((task) => task.id !== taskId);
+    return { ok: true, value: undefined };
+  });
+
   render(
     <MemoryRouter>
       <TasksPage />
@@ -89,6 +96,7 @@ describe("TasksPage", () => {
     vi.mocked(createTaskService).mockReset();
     vi.mocked(getUserTasksService).mockReset();
     vi.mocked(updateTaskService).mockReset();
+    vi.mocked(deleteTaskService).mockReset();
   });
 
   afterEach(() => {
@@ -290,17 +298,57 @@ describe("TasksPage", () => {
     expect(screen.getByLabelText(/título/i)).toHaveValue("Comprar leche");
   });
 
-  it("elimina una tarea al confirmar, y vuelve a mostrar el estado vacío", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+  it("elimina una tarea en Firestore al confirmar en el modal, y vuelve a mostrar el estado vacío", async () => {
     renderTasksPage();
     await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
     await createTaskInUI("Comprar leche");
 
     await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /^eliminar$/i }),
+    );
 
+    expect(deleteTaskService).toHaveBeenCalledWith("mock-Comprar leche");
     expect(screen.queryByText("Comprar leche")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /todavía no tenés tareas/i }),
+      await screen.findByRole("heading", { name: /todavía no tenés tareas/i }),
     ).toBeInTheDocument();
+    // Mismo criterio que crear/completar/editar: no debe releer toda la colección.
+    expect(getUserTasksService).toHaveBeenCalledTimes(1);
+  });
+
+  it("no elimina la tarea si se cancela en el modal", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+
+    await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));
+    await userEvent.click(screen.getByRole("button", { name: /cancelar/i }));
+
+    expect(deleteTaskService).not.toHaveBeenCalled();
+    expect(screen.getByText("Comprar leche")).toBeInTheDocument();
+  });
+
+  it("muestra un error comprensible si Firestore rechaza la eliminación", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+    vi.mocked(deleteTaskService).mockResolvedValue({
+      ok: false,
+      error: "No tenés permiso para realizar esta acción.",
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /^eliminar$/i }),
+    );
+
+    expect(
+      await screen.findByText(/no tenés permiso para realizar esta acción/i),
+    ).toBeInTheDocument();
+    // La tarea sigue en la lista: no se borró localmente sin confirmación real.
+    expect(screen.getByText("Comprar leche")).toBeInTheDocument();
   });
 });

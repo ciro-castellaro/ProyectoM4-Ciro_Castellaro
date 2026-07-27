@@ -5,6 +5,7 @@ import {
   where,
   doc,
   updateDoc,
+  deleteDoc,
   Timestamp,
 } from "firebase/firestore";
 import { db, tasksCollection, taskFromDocument, TASKS_COLLECTION } from "./firestore";
@@ -81,6 +82,17 @@ export async function updateTask(
       ...changes,
       updatedAt: Timestamp.now(),
     });
+
+    return { ok: true, value: undefined };
+  } catch (error) {
+    return { ok: false, error: getFirestoreErrorMessage(error) };
+  }
+}
+
+export async function deleteTask(taskId: string): Promise<Result<void>> {
+  try {
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await deleteDoc(taskRef);
 
     return { ok: true, value: undefined };
   } catch (error) {

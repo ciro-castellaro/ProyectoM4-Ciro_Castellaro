@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TodoItem from "../../src/components/TodoItem/TodoItem";
 import type { Task } from "../../src/types/task";
@@ -26,7 +26,7 @@ describe("TodoItem", () => {
         isEditing={false}
         isTogglePending={false}
         onToggleComplete={vi.fn()}
-        onDelete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onStartEdit={vi.fn()}
         onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
@@ -45,7 +45,7 @@ describe("TodoItem", () => {
         isEditing={false}
         isTogglePending={false}
         onToggleComplete={vi.fn()}
-        onDelete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onStartEdit={vi.fn()}
         onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
@@ -64,7 +64,7 @@ describe("TodoItem", () => {
         isEditing={false}
         isTogglePending={false}
         onToggleComplete={handleToggle}
-        onDelete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onStartEdit={vi.fn()}
         onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
@@ -83,7 +83,7 @@ describe("TodoItem", () => {
         isEditing={false}
         isTogglePending
         onToggleComplete={vi.fn()}
-        onDelete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onStartEdit={vi.fn()}
         onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
@@ -102,7 +102,7 @@ describe("TodoItem", () => {
         isEditing={false}
         isTogglePending={false}
         onToggleComplete={vi.fn()}
-        onDelete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onStartEdit={handleStartEdit}
         onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={vi.fn()}
@@ -114,9 +114,29 @@ describe("TodoItem", () => {
     expect(handleStartEdit).toHaveBeenCalledWith("task-1");
   });
 
-  it("pide confirmación y llama a onDelete si se confirma", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
-    const handleDelete = vi.fn();
+  it("muestra un modal de confirmación al hacer clic en Eliminar", async () => {
+    render(
+      <TodoItem
+        task={baseTask}
+        isEditing={false}
+        isTogglePending={false}
+        onToggleComplete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onCancelEdit={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));
+
+    const dialog = screen.getByRole("dialog", { name: /eliminar tarea/i });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText(/comprar leche/i)).toBeInTheDocument();
+  });
+
+  it("llama a onDelete al confirmar en el modal", async () => {
+    const handleDelete = vi.fn().mockResolvedValue({ ok: true, value: undefined });
     render(
       <TodoItem
         task={baseTask}
@@ -131,13 +151,15 @@ describe("TodoItem", () => {
     );
 
     await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /^eliminar$/i }),
+    );
 
-    expect(window.confirm).toHaveBeenCalled();
     expect(handleDelete).toHaveBeenCalledWith("task-1");
   });
 
-  it("no llama a onDelete si se cancela la confirmación", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("no llama a onDelete si se cancela en el modal, y lo cierra", async () => {
     const handleDelete = vi.fn();
     render(
       <TodoItem
@@ -153,8 +175,40 @@ describe("TodoItem", () => {
     );
 
     await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));
+    await userEvent.click(screen.getByRole("button", { name: /cancelar/i }));
 
     expect(handleDelete).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("muestra el error y mantiene el modal abierto si falla la eliminación", async () => {
+    const handleDelete = vi.fn().mockResolvedValue({
+      ok: false,
+      error: "No se pudo eliminar la tarea.",
+    });
+    render(
+      <TodoItem
+        task={baseTask}
+        isEditing={false}
+        isTogglePending={false}
+        onToggleComplete={vi.fn()}
+        onDelete={handleDelete}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onCancelEdit={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /eliminar/i }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /^eliminar$/i }),
+    );
+
+    expect(
+      await screen.findByText(/no se pudo eliminar la tarea/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   describe("en modo edición", () => {
@@ -165,7 +219,7 @@ describe("TodoItem", () => {
           isEditing
           isTogglePending={false}
           onToggleComplete={vi.fn()}
-          onDelete={vi.fn()}
+          onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
           onStartEdit={vi.fn()}
           onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
           onCancelEdit={vi.fn()}
@@ -189,7 +243,7 @@ describe("TodoItem", () => {
         isEditing
         isTogglePending={false}
         onToggleComplete={vi.fn()}
-        onDelete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onStartEdit={vi.fn()}
         onSaveEdit={handleSaveEdit}
         onCancelEdit={vi.fn()}
@@ -217,7 +271,7 @@ describe("TodoItem", () => {
         isEditing
         isTogglePending={false}
         onToggleComplete={vi.fn()}
-        onDelete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onStartEdit={vi.fn()}
         onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
         onCancelEdit={handleCancelEdit}

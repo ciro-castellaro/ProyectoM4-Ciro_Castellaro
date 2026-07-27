@@ -9,7 +9,7 @@ interface TodoListProps {
   editingTaskId: string | null;
   pendingTaskId: string | null;
   onToggleComplete: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<Result<unknown>>;
   onStartEdit: (id: string) => void;
   onSaveEdit: (
     id: string,

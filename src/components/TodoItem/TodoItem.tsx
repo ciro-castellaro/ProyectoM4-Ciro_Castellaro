@@ -1,4 +1,6 @@
+import { useState } from "react";
 import TodoForm from "../TodoForm/TodoForm";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
 import type { Task } from "../../types/task";
 import type { Result } from "../../types/result";
 import "./TodoItem.css";
@@ -8,7 +10,7 @@ interface TodoItemProps {
   isEditing: boolean;
   isTogglePending: boolean;
   onToggleComplete: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<Result<unknown>>;
   onStartEdit: (id: string) => void;
   onSaveEdit: (
     id: string,
@@ -27,9 +29,19 @@ function TodoItem({
   onSaveEdit,
   onCancelEdit,
 }: TodoItemProps) {
-  function handleDelete() {
-    if (window.confirm(`¿Eliminar la tarea "${task.title}"?`)) {
-      onDelete(task.id);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleConfirmDelete() {
+    setIsDeleting(true);
+    const result = await onDelete(task.id);
+    setIsDeleting(false);
+
+    if (result.ok) {
+      setIsConfirmingDelete(false);
+    } else {
+      setDeleteError(result.error);
     }
   }
 
@@ -84,10 +96,29 @@ function TodoItem({
         >
           Editar
         </button>
-        <button type="button" className="danger" onClick={handleDelete}>
+        <button
+          type="button"
+          className="danger"
+          onClick={() => {
+            setDeleteError(null);
+            setIsConfirmingDelete(true);
+          }}
+        >
           Eliminar
         </button>
       </div>
+
+      {isConfirmingDelete && (
+        <ConfirmDialog
+          title="Eliminar tarea"
+          description={`¿Eliminar la tarea "${task.title}"? Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          isConfirming={isDeleting}
+          error={deleteError}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setIsConfirmingDelete(false)}
+        />
+      )}
     </li>
   );
 }
