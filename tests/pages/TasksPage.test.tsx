@@ -351,4 +351,31 @@ describe("TasksPage", () => {
     // La tarea sigue en la lista: no se borró localmente sin confirmación real.
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();
   });
+
+  it("no permite tener abiertos a la vez el formulario de creación y el de edición", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /^nueva tarea$/i }),
+    );
+    expect(screen.getByRole("heading", { name: /^nueva tarea$/i })).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/título/i)).toHaveLength(1);
+
+    // Abrir la edición de una tarea existente debe cerrar el formulario de
+    // creación: de lo contrario habría dos campos con el mismo id en el DOM.
+    await userEvent.click(screen.getByRole("button", { name: /editar/i }));
+    expect(
+      screen.queryByRole("heading", { name: /^nueva tarea$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText(/título/i)).toHaveLength(1);
+
+    // Y a la inversa: abrir "Nueva tarea" mientras se edita debe cerrar la edición.
+    await userEvent.click(
+      screen.getByRole("button", { name: /^nueva tarea$/i }),
+    );
+    expect(screen.getByRole("heading", { name: /^nueva tarea$/i })).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/título/i)).toHaveLength(1);
+  });
 });

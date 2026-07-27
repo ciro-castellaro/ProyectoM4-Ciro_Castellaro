@@ -33,6 +33,7 @@ function TasksPage() {
       } as const;
     }
 
+    setActionError(null);
     const result = await createTask(user.uid, values);
 
     if (result.ok) {
@@ -82,6 +83,7 @@ function TasksPage() {
   }
 
   async function handleDeleteTask(id: string) {
+    setActionError(null);
     const result = await deleteTask(id);
 
     if (result.ok) {
@@ -98,6 +100,7 @@ function TasksPage() {
     id: string,
     values: { title: string; description: string },
   ) {
+    setActionError(null);
     const result = await updateTask(id, {
       title: values.title,
       description: values.description,
@@ -141,7 +144,10 @@ function TasksPage() {
           <button
             type="button"
             className="primary"
-            onClick={() => setIsCreating(true)}
+            onClick={() => {
+              setEditingTaskId(null);
+              setIsCreating(true);
+            }}
           >
             Nueva tarea
           </button>
@@ -169,7 +175,10 @@ function TasksPage() {
           pendingTaskId={pendingTaskId}
           onToggleComplete={handleToggleComplete}
           onDelete={handleDeleteTask}
-          onStartEdit={setEditingTaskId}
+          onStartEdit={(id) => {
+            setIsCreating(false);
+            setEditingTaskId(id);
+          }}
           onSaveEdit={handleSaveEdit}
           onCancelEdit={() => setEditingTaskId(null)}
           onCreateFirst={() => setIsCreating(true)}
