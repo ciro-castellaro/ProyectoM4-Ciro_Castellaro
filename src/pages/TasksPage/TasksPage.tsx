@@ -6,9 +6,12 @@ import {
   updateTask,
   deleteTask,
 } from "../../services/firebase/tasks";
+import { sendSummaryEmail } from "../../services/email/sendSummary";
+import { buildTaskSummary } from "../../features/tasks/buildTaskSummary";
 import AppHeader from "../../components/AppHeader/AppHeader";
 import TodoForm from "../../components/TodoForm/TodoForm";
 import TodoList from "../../components/TodoList/TodoList";
+import EmailSummary from "../../components/EmailSummary/EmailSummary";
 import "./TasksPage.css";
 
 function TasksPage() {
@@ -128,6 +131,18 @@ function TasksPage() {
     return result;
   }
 
+  async function handleSendSummary() {
+    if (!user) {
+      return {
+        ok: false,
+        error: "Tenés que iniciar sesión para enviar el resumen.",
+      } as const;
+    }
+
+    const idToken = await user.getIdToken();
+    return sendSummaryEmail(idToken, buildTaskSummary(tasks));
+  }
+
   return (
     <>
       <AppHeader />
@@ -182,6 +197,11 @@ function TasksPage() {
           onSaveEdit={handleSaveEdit}
           onCancelEdit={() => setEditingTaskId(null)}
           onCreateFirst={() => setIsCreating(true)}
+        />
+
+        <EmailSummary
+          summary={buildTaskSummary(tasks)}
+          onSend={handleSendSummary}
         />
       </main>
     </>

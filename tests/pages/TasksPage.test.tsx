@@ -10,6 +10,7 @@ import {
   updateTask as updateTaskService,
   deleteTask as deleteTaskService,
 } from "../../src/services/firebase/tasks";
+import { sendSummaryEmail as sendSummaryEmailService } from "../../src/services/email/sendSummary";
 import type { Task } from "../../src/types/task";
 
 vi.mock("../../src/hooks/useAuth", () => ({
@@ -27,6 +28,10 @@ vi.mock("../../src/services/firebase/tasks", () => ({
   deleteTask: vi.fn(),
 }));
 
+vi.mock("../../src/services/email/sendSummary", () => ({
+  sendSummaryEmail: vi.fn(),
+}));
+
 // Simula una "base de datos" en memoria: crear agrega acá, y la consulta de
 // listado (que dispara handleCreateTask via refetch) lee de acá. Así los
 // tests reflejan el flujo real: crear -> refetch -> aparece en la lista.
@@ -37,8 +42,17 @@ function renderTasksPage() {
 
   vi.mocked(useAuth).mockReturnValue({
     status: "success",
-    data: { uid: "user-1", email: "usuario@matecode.com" } as never,
+    data: {
+      uid: "user-1",
+      email: "usuario@matecode.com",
+      getIdToken: vi.fn().mockResolvedValue("fake-id-token"),
+    } as never,
     error: null,
+  });
+
+  vi.mocked(sendSummaryEmailService).mockResolvedValue({
+    ok: true,
+    value: { message: "Resumen enviado." },
   });
 
   vi.mocked(createTaskService).mockImplementation(async (userId, values) => {
@@ -97,6 +111,7 @@ describe("TasksPage", () => {
     vi.mocked(getUserTasksService).mockReset();
     vi.mocked(updateTaskService).mockReset();
     vi.mocked(deleteTaskService).mockReset();
+    vi.mocked(sendSummaryEmailService).mockReset();
   });
 
   afterEach(() => {
@@ -377,5 +392,47 @@ describe("TasksPage", () => {
     );
     expect(screen.getByRole("heading", { name: /^nueva tarea$/i })).toBeInTheDocument();
     expect(screen.getAllByLabelText(/título/i)).toHaveLength(1);
+  });
+
+  it("envía el resumen con el idToken del usuario y los contadores actuales", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+    await createTaskInUI("Lavar el auto");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /enviar resumen por email/i }),
+    );
+
+    expect(
+      await screen.findByText(/te enviamos un resumen a tu email/i),
+    ).toBeInTheDocument();
+    expect(sendSummaryEmailService).toHaveBeenCalledWith(
+      "fake-id-token",
+      expect.objectContaining({
+        total: 2,
+        pending: 2,
+        completed: 0,
+        pendingTitles: ["Lavar el auto", "Comprar leche"],
+        completedTitles: [],
+      }),
+    );
+  });
+
+  it("muestra un error comprensible si falla el envío del resumen", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    vi.mocked(sendSummaryEmailService).mockResolvedValue({
+      ok: false,
+      error: "No se pudo enviar el resumen.",
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /enviar resumen por email/i }),
+    );
+
+    expect(
+      await screen.findByText(/no se pudo enviar el resumen/i),
+    ).toBeInTheDocument();
   });
 });

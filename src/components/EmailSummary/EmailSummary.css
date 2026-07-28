@@ -1,0 +1,25 @@
+.email-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.email-summary-description {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.email-summary > button {
+  align-self: flex-start;
+}
+
+.email-summary-success {
+  margin: 0;
+  color: var(--color-success);
+}
+
+@media (max-width: 480px) {
+  .email-summary > button {
+    align-self: stretch;
+  }
+}
