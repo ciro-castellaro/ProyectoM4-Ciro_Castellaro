@@ -1,5 +1,5 @@
-import type { Result } from "../src/types/result";
-import type { SendSummaryRequest, TaskSummary } from "../src/types/email";
+import type { Result } from "../src/types/result.js";
+import type { SendSummaryRequest, TaskSummary } from "../src/types/email.js";
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");

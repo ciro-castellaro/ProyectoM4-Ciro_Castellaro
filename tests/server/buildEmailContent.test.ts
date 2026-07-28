@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { buildEmailContent } from "../../server/buildEmailContent";
-import type { TaskSummary } from "../../src/types/email";
+import { buildEmailContent } from "../../server/buildEmailContent.js";
+import type { TaskSummary } from "../../src/types/email.js";
 
 describe("buildEmailContent", () => {
   it("incluye los contadores y el email destinatario", () => {

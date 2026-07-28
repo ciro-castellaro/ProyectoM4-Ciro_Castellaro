@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateSendSummaryRequest } from "../../server/validateSendSummaryRequest";
+import { validateSendSummaryRequest } from "../../server/validateSendSummaryRequest.js";
 
 const validSummary = {
   total: 2,

@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import type { SendSummaryResponse } from "../src/types/email";
-import { validateSendSummaryRequest } from "../server/validateSendSummaryRequest";
-import { verifyIdToken } from "../server/verifyIdToken";
-import { buildEmailContent } from "../server/buildEmailContent";
+import type { SendSummaryResponse } from "../src/types/email.js";
+import { validateSendSummaryRequest } from "../server/validateSendSummaryRequest.js";
+import { verifyIdToken } from "../server/verifyIdToken.js";
+import { buildEmailContent } from "../server/buildEmailContent.js";
 
 export default async function handler(
   req: VercelRequest,

@@ -1,5 +1,5 @@
-import type { Result } from "../src/types/result";
-import { getAdminAuth } from "./firebaseAdmin";
+import type { Result } from "../src/types/result.js";
+import { getAdminAuth } from "./firebaseAdmin.js";
 
 export interface VerifiedUser {
   uid: string;

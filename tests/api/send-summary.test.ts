@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import handler from "../../api/send-summary";
-import { verifyIdToken } from "../../server/verifyIdToken";
+import handler from "../../api/send-summary.js";
+import { verifyIdToken } from "../../server/verifyIdToken.js";
 
-vi.mock("../../server/verifyIdToken", () => ({
+vi.mock("../../server/verifyIdToken.js", () => ({
   verifyIdToken: vi.fn(),
 }));
 

@@ -1,4 +1,4 @@
-import type { TaskSummary } from "../src/types/email";
+import type { TaskSummary } from "../src/types/email.js";
 
 export interface EmailContent {
   subject: string;
