@@ -48,9 +48,12 @@ Completá el `.env` con tus propios valores (ver [Variables de entorno](#variabl
 | `VITE_FIREBASE_STORAGE_BUCKET`      | Bucket de Storage del proyecto Firebase.                                                           |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Sender ID de Firebase Cloud Messaging.                                                             |
 | `VITE_FIREBASE_APP_ID`              | ID de la app dentro del proyecto Firebase.                                                         |
+| `FIREBASE_ADMIN_PROJECT_ID`         | Service account de Firebase (solo servidor), usada por la Vercel Function para verificar sesiones. |
+| `FIREBASE_ADMIN_CLIENT_EMAIL`       | Email de la service account (consola de Firebase → Cuentas de servicio).                           |
+| `FIREBASE_ADMIN_PRIVATE_KEY`        | Clave privada de la service account. Nunca lleva el prefijo `VITE_`: no debe llegar al cliente.     |
 
-Las variables de AWS SES / Vercel Functions se agregarán al implementar el envío de emails. Ver
-`.env.example` para la plantilla actualizada.
+Las variables de AWS SES se agregarán al implementar el envío real de emails. Ver `.env.example`
+para la plantilla actualizada.
 
 > Nota: los valores de Firebase de arriba son configuración pública del cliente (quedan visibles
 > en el bundle de JS), no secretos de servidor. Se mantienen en `.env` de todos modos como buena

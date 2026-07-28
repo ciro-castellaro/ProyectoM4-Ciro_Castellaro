@@ -69,9 +69,9 @@ export async function getUserTasks(userId: string): Promise<Result<Task[]>> {
   }
 }
 
-// Genérica a propósito: la usan tanto marcar como completada (Etapa 3.6,
-// pasando solo `completed`) como editar título/descripción (Etapa 3.7), sin
-// duplicar la misma llamada a Firestore en las dos etapas.
+// Genérica a propósito: la usan tanto marcar como completada (pasando solo
+// `completed`) como editar título/descripción, sin duplicar la misma llamada
+// a Firestore para cada caso.
 export async function updateTask(
   taskId: string,
   changes: Partial<Pick<Task, "title" | "description" | "completed">>,

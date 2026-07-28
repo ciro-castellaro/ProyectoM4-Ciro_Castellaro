@@ -1,11 +1,12 @@
 import type { TaskSummary } from "../../types/email";
 import type { Result } from "../../types/result";
 
-// Implementación placeholder: todavía no existe la Vercel Function (se crea en
-// la etapa siguiente) ni el envío real por AWS SES (dos etapas después). La
-// firma ya respeta el contrato definido (idToken + TaskSummary), así que
-// conectar el fetch real más adelante no debería requerir tocar los
-// componentes que ya usan esta función.
+// Implementación placeholder: la interfaz todavía no llama a la Vercel
+// Function real (api/send-summary.ts), ni esa función envía el email de
+// verdad todavía (falta integrar AWS SES). La firma ya respeta el contrato
+// definido (idToken + TaskSummary), así que conectar el fetch real más
+// adelante no debería requerir tocar los componentes que ya usan esta
+// función.
 export async function sendSummaryEmail(
   idToken: string,
   summary: TaskSummary,
