@@ -27,6 +27,25 @@ describe("RegisterForm", () => {
     expect(handleSubmit).not.toHaveBeenCalled();
   });
 
+  it("muestra un error de validación si la contraseña tiene menos de 6 caracteres", async () => {
+    const handleSubmit = vi.fn();
+    render(<RegisterForm onSubmit={handleSubmit} />);
+
+    await userEvent.type(
+      screen.getByLabelText(/email/i),
+      "usuario@matecode.com",
+    );
+    await userEvent.type(screen.getByLabelText(/contraseña/i), "123");
+    await userEvent.click(
+      screen.getByRole("button", { name: /crear cuenta/i }),
+    );
+
+    expect(
+      screen.getByText(/la contraseña debe tener al menos 6 caracteres/i),
+    ).toBeInTheDocument();
+    expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
   it("llama a onSubmit con los valores saneados cuando el formulario es válido", async () => {
     const handleSubmit = vi
       .fn<(values: { email: string; password: string }) => Promise<Result<unknown>>>()
@@ -73,6 +92,9 @@ describe("RegisterForm", () => {
         screen.getByRole("button", { name: /creando cuenta/i }),
       ).toBeDisabled();
     });
+
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/contraseña/i)).toBeDisabled();
 
     resolveSubmit({ ok: true, value: undefined });
     await clickPromise;

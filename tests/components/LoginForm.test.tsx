@@ -93,8 +93,43 @@ describe("LoginForm", () => {
       ).toBeDisabled();
     });
 
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/contraseña/i)).toBeDisabled();
+
     resolveSubmit({ ok: true, value: undefined });
     await clickPromise;
+  });
+
+  it("limpia el error del intento anterior al reintentar con éxito", async () => {
+    const handleSubmit = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        error: "Email o contraseña incorrectos.",
+      })
+      .mockResolvedValueOnce({ ok: true, value: undefined });
+
+    render(<LoginForm onSubmit={handleSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/email/i), "user@matecode.com");
+    await userEvent.type(screen.getByLabelText(/contraseña/i), "wrong-pass");
+    await userEvent.click(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    );
+
+    expect(
+      await screen.findByText(/email o contraseña incorrectos/i),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/email o contraseña incorrectos/i),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("muestra el error del servidor cuando el login falla", async () => {
