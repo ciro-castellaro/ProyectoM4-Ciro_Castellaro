@@ -3,6 +3,7 @@ import type { SendSummaryResponse } from "../src/types/email.js";
 import { validateSendSummaryRequest } from "../server/validateSendSummaryRequest.js";
 import { verifyIdToken } from "../server/verifyIdToken.js";
 import { buildEmailContent } from "../server/buildEmailContent.js";
+import { sendEmailViaSes } from "../server/sendEmailViaSes.js";
 
 export default async function handler(
   req: VercelRequest,
@@ -31,18 +32,16 @@ export default async function handler(
       .json({ ok: false, error: verified.error } satisfies SendSummaryResponse);
   }
 
-  // El contenido ya queda armado y listo para enviarse. La futura
-  // integración con AWS SES reemplaza este console.log por el envío real
-  // usando este mismo subject/text.
   const emailContent = buildEmailContent(verified.value.email, summary);
-  console.log(
-    `[send-summary] Prepared email for ${verified.value.email}: "${emailContent.subject}"`,
-  );
+  const sendResult = await sendEmailViaSes(verified.value.email, emailContent);
 
-  return res.status(200).json({
-    ok: true,
-    value: {
-      message: `Resumen preparado para ${verified.value.email} (todavía no se envía: falta integrar AWS SES).`,
-    },
-  } satisfies SendSummaryResponse);
+  if (!sendResult.ok) {
+    return res
+      .status(500)
+      .json({ ok: false, error: sendResult.error } satisfies SendSummaryResponse);
+  }
+
+  return res
+    .status(200)
+    .json({ ok: true, value: sendResult.value } satisfies SendSummaryResponse);
 }
