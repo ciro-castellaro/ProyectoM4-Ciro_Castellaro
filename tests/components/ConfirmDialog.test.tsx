@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -80,5 +81,55 @@ describe("ConfirmDialog", () => {
     expect(
       screen.getByRole("button", { name: /eliminando/i }),
     ).toBeDisabled();
+  });
+
+  it("atrapa el foco dentro del diálogo: Tab desde el último botón vuelve al primero", async () => {
+    renderDialog();
+
+    screen.getByRole("button", { name: /^eliminar$/i }).focus();
+    await userEvent.tab();
+
+    expect(screen.getByRole("button", { name: /cancelar/i })).toHaveFocus();
+  });
+
+  it("atrapa el foco dentro del diálogo: Shift+Tab desde el primer botón va al último", async () => {
+    renderDialog();
+
+    expect(screen.getByRole("button", { name: /cancelar/i })).toHaveFocus();
+    await userEvent.tab({ shift: true });
+
+    expect(screen.getByRole("button", { name: /^eliminar$/i })).toHaveFocus();
+  });
+
+  it("devuelve el foco al elemento que abrió el diálogo al cerrarse", async () => {
+    function Wrapper() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Eliminar tarea
+          </button>
+          {open && (
+            <ConfirmDialog
+              title="Eliminar tarea"
+              description="¿Eliminar?"
+              confirmLabel="Eliminar"
+              isConfirming={false}
+              error={null}
+              onConfirm={vi.fn()}
+              onCancel={() => setOpen(false)}
+            />
+          )}
+        </>
+      );
+    }
+
+    render(<Wrapper />);
+    const trigger = screen.getByRole("button", { name: /eliminar tarea/i });
+    await userEvent.click(trigger);
+
+    await userEvent.click(screen.getByRole("button", { name: /cancelar/i }));
+
+    expect(trigger).toHaveFocus();
   });
 });
