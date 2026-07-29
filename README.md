@@ -71,16 +71,71 @@ Completá el `.env` con tus propios valores (ver [Variables de entorno](#variabl
 
 ## Arquitectura
 
-_Pendiente — se documentará a medida que se agreguen las capas del proyecto._
+El código se organiza en capas con responsabilidades separadas:
+
+- `src/pages/` — pantallas completas (login, registro, tareas); arman la página a partir de
+  componentes y hooks.
+- `src/components/` — piezas de UI reutilizables con una única responsabilidad (formularios, lista
+  de tareas, encabezado, modal de confirmación, resumen por email).
+- `src/hooks/` — estado de dominio reutilizable entre componentes (`useAuth`, `useTasks`).
+- `src/features/` — lógica de validación pura, sin dependencias de UI ni de red (`validateAuth`,
+  `validateTask`, `buildTaskSummary`).
+- `src/services/` — integraciones con servicios externos (Firebase Authentication, Cloud
+  Firestore, el fetch al endpoint de email). Es la única capa que conoce los SDKs externos.
+- `src/routes/` — configuración de React Router y protección de rutas privadas.
+- `src/types/` — contratos de datos compartidos, incluido `Result<T>` (usado en todo el proyecto,
+  frontend y backend, para modelar éxito/error de forma explícita en vez de con excepciones) y los
+  tipos que comparten el frontend con la Vercel Function (`SendSummaryRequest`,
+  `SendSummaryResponse`).
+- `api/` — el único punto de entrada de las Vercel Functions. Se mantiene deliberadamente delgado:
+  solo valida el método HTTP y orquesta las llamadas a `server/`.
+- `server/` — lógica de servidor compartida (verificación del `idToken`, validación del body,
+  armado del email, envío por SES). Vive fuera de `api/` a propósito: Vercel trata cada archivo
+  dentro de `api/` como un endpoint público, así que separarla evita crear rutas HTTP
+  involuntarias.
+
+Todas las capas usan el mismo tipo `Result<T>` (`{ ok: true; value: T } | { ok: false; error:
+string }`) para propagar errores de forma explícita y tipada: el compilador obliga a manejar el
+caso de error en cada punto donde se consume un resultado.
 
 ## Flujo de emails
 
-_Pendiente — se documentará al implementar el envío de emails._
+1. En `TasksPage`, el usuario hace clic en el botón de enviar resumen (`EmailSummary`).
+2. El cliente arma el resumen (`buildTaskSummary`) a partir de las tareas ya cargadas y obtiene un
+   `idToken` fresco de Firebase Authentication (`user.getIdToken()`).
+3. Se hace un `POST /api/send-summary` con `{ idToken, summary }`.
+4. La Vercel Function (`api/send-summary.ts`) delega en `server/`:
+   - `verifyIdToken` verifica el token con `firebase-admin` (nunca se confía en un email que venga
+     del cliente).
+   - `validateSendSummaryRequest` valida la forma del body.
+   - `buildEmailContent` arma el asunto y el cuerpo del email.
+   - `sendEmailViaSes` lo envía con el SDK de AWS SES, usando **el email del usuario ya verificado
+     por Firebase** como destinatario (nunca uno provisto por el cliente), lo que evita que el
+     endpoint pueda usarse para mandar mail a direcciones arbitrarias.
+5. Cualquier error (token inválido, SES caído, credenciales mal configuradas) se traduce a un
+   mensaje genérico y seguro antes de llegar al cliente (`getSesErrorMessage`); el detalle real
+   solo queda en los logs del servidor.
+
+**Nota operativa:** mientras la cuenta de AWS SES esté en modo *sandbox*, solo se puede enviar a
+direcciones verificadas manualmente en la consola de AWS (*Verified identities*). Para que
+cualquier usuario registrado reciba su resumen sin verificación previa, hay que solicitar la
+salida del sandbox (*production access*) en la consola de AWS.
 
 ## Uso de IA en este proyecto
 
-_Pendiente — se documentará al finalizar el desarrollo. El detalle del proceso se registra en
-`LOGS M4/uso-de-IA.md`, fuera de este repositorio._
+El desarrollo se hizo con Claude Code como asistente, siguiendo estos principios:
+
+- El proyecto se construyó en etapas pequeñas y secuenciales; cada una se implementó, se explicó y
+  se confirmó antes de pasar a la siguiente.
+- El código propuesto por la IA se revisó y se adaptó al proyecto — no se copiaron soluciones sin
+  entenderlas.
+- Los commits se hacen exclusivamente con la autoría de Ciro Castellaro; la IA nunca figura como
+  colaboradora ni coautora.
+- Nunca se subieron secretos al repositorio: las claves de Firebase, AWS y Vercel viven solo en
+  `.env` (ignorado por Git) y en la configuración de entorno de Vercel.
+
+El detalle etapa por etapa (qué se hizo, por qué se usó la IA en cada caso y qué se revisó) se
+registra en `LOGS M4/uso-de-IA.md`, fuera de este repositorio.
 
 ## Deploy
 
