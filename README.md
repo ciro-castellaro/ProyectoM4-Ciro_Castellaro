@@ -3,8 +3,8 @@
 Aplicación web SPA de gestión de tareas para **MateCode**. Permite que empleados gestionen sus
 tareas diarias de forma organizada, persistente y accesible desde cualquier dispositivo.
 
-**App deployada:** https://matecode-todo.vercel.app
-**Uso de IA:** https://drive.google.com/drive/folders/1IxxSU3e7-I9HpKwgTkmpk5DwTncvxqY2?usp=sharing
+- **App deployada:** https://matecode-todo.vercel.app
+- **Uso de IA:** https://drive.google.com/drive/folders/1IxxSU3e7-I9HpKwgTkmpk5DwTncvxqY2?usp=sharing
 
 ## Tecnologías
 
