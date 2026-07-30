@@ -62,6 +62,8 @@ function renderTasksPage() {
       title: values.title,
       description: values.description,
       completed: false,
+      priority: values.priority,
+      dueDate: values.dueDate,
       createdAt: "2026-01-10T12:00:00.000Z",
       updatedAt: "2026-01-10T12:00:00.000Z",
     };
@@ -195,6 +197,8 @@ describe("TasksPage", () => {
     expect(createTaskService).toHaveBeenCalledWith("user-1", {
       title: "Comprar leche",
       description: "",
+      priority: "medium",
+      dueDate: null,
     });
   });
 
@@ -285,6 +289,8 @@ describe("TasksPage", () => {
     expect(updateTaskService).toHaveBeenCalledWith("mock-Comprar leche", {
       title: "Comprar pan",
       description: "",
+      priority: "medium",
+      dueDate: null,
     });
     expect(await screen.findByText("Comprar pan")).toBeInTheDocument();
     expect(screen.queryByText("Comprar leche")).not.toBeInTheDocument();
@@ -428,6 +434,64 @@ describe("TasksPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Todas" }));
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();
     expect(screen.getByText("Lavar el auto")).toBeInTheDocument();
+  });
+
+  it("crea una tarea con la prioridad y la fecha de vencimiento elegidas", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /^nueva tarea$/i }),
+    );
+    await userEvent.type(screen.getByLabelText(/título/i), "Comprar leche");
+    await userEvent.selectOptions(screen.getByLabelText(/prioridad/i), "high");
+    await userEvent.type(
+      screen.getByLabelText(/fecha de vencimiento/i),
+      "2026-03-15",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /guardar tarea/i }),
+    );
+    await screen.findByText("Comprar leche");
+
+    expect(createTaskService).toHaveBeenCalledWith("user-1", {
+      title: "Comprar leche",
+      description: "",
+      priority: "high",
+      dueDate: "2026-03-15",
+    });
+  });
+
+  it("no muestra el control de orden cuando no hay tareas", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+
+    expect(screen.queryByLabelText(/ordenar por/i)).not.toBeInTheDocument();
+  });
+
+  it("ordena la lista de tareas por prioridad al elegirlo en el control de orden", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+    await createTaskInUI("Lavar el auto");
+
+    const lecheItem = screen.getByText("Comprar leche").closest("li")!;
+    await userEvent.click(
+      within(lecheItem).getByRole("button", { name: /editar/i }),
+    );
+    await userEvent.selectOptions(screen.getByLabelText(/prioridad/i), "high");
+    await userEvent.click(
+      screen.getByRole("button", { name: /guardar tarea/i }),
+    );
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/ordenar por/i),
+      "priority",
+    );
+
+    const items = screen.getAllByRole("listitem");
+    expect(items[0]).toHaveTextContent("Comprar leche");
+    expect(items[1]).toHaveTextContent("Lavar el auto");
   });
 
   it("envía el resumen con el idToken del usuario y los contadores actuales", async () => {

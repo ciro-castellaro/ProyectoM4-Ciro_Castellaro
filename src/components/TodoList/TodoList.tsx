@@ -1,13 +1,15 @@
-import type { Task, TaskFilter } from "../../types/task";
+import type { Task, TaskFilter, TaskPriority, TaskSortOption } from "../../types/task";
 import type { AsyncState } from "../../types/async";
 import type { Result } from "../../types/result";
 import { filterTasks } from "../../features/tasks/filterTasks";
+import { sortTasks } from "../../features/tasks/sortTasks";
 import TodoItem from "../TodoItem/TodoItem";
 import "./TodoList.css";
 
 interface TodoListProps {
   tasksState: AsyncState<Task[]>;
   filter: TaskFilter;
+  sortBy: TaskSortOption;
   editingTaskId: string | null;
   pendingTaskId: string | null;
   onToggleComplete: (id: string) => void;
@@ -15,7 +17,12 @@ interface TodoListProps {
   onStartEdit: (id: string) => void;
   onSaveEdit: (
     id: string,
-    values: { title: string; description: string },
+    values: {
+      title: string;
+      description: string;
+      priority: TaskPriority;
+      dueDate: string | null;
+    },
   ) => Promise<Result<unknown>>;
   onCancelEdit: () => void;
   onCreateFirst: () => void;
@@ -24,6 +31,7 @@ interface TodoListProps {
 function TodoList({
   tasksState,
   filter,
+  sortBy,
   editingTaskId,
   pendingTaskId,
   onToggleComplete,
@@ -80,9 +88,11 @@ function TodoList({
     );
   }
 
+  const visibleTasks = sortTasks(filteredTasks, sortBy);
+
   return (
     <ul className="todo-list">
-      {filteredTasks.map((task) => (
+      {visibleTasks.map((task) => (
         <TodoItem
           key={task.id}
           task={task}

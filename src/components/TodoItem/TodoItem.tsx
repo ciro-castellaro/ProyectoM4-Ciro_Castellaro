@@ -1,7 +1,7 @@
 import { useState } from "react";
 import TodoForm from "../TodoForm/TodoForm";
 import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
-import type { Task } from "../../types/task";
+import type { Task, TaskPriority } from "../../types/task";
 import type { Result } from "../../types/result";
 import "./TodoItem.css";
 
@@ -14,9 +14,27 @@ interface TodoItemProps {
   onStartEdit: (id: string) => void;
   onSaveEdit: (
     id: string,
-    values: { title: string; description: string },
+    values: {
+      title: string;
+      description: string;
+      priority: TaskPriority;
+      dueDate: string | null;
+    },
   ) => Promise<Result<unknown>>;
   onCancelEdit: () => void;
+}
+
+const PRIORITY_LABEL: Record<TaskPriority, string> = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+};
+
+// "YYYY-MM-DD" -> "DD/MM/YYYY" por manipulación de string, sin pasar por
+// `Date`: evita el corrimiento de un día por zona horaria.
+function formatDueDate(dueDate: string): string {
+  const [year, month, day] = dueDate.split("-");
+  return `${day}/${month}/${year}`;
 }
 
 function TodoItem({
@@ -50,7 +68,12 @@ function TodoItem({
       <li className="todo-item card">
         <h2>Editando tarea</h2>
         <TodoForm
-          initialValues={{ title: task.title, description: task.description }}
+          initialValues={{
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            dueDate: task.dueDate,
+          }}
           onSubmit={(values) => onSaveEdit(task.id, values)}
           onCancel={onCancelEdit}
         />
@@ -78,6 +101,18 @@ function TodoItem({
           {task.description && (
             <p className="todo-item-description">{task.description}</p>
           )}
+          <div className="todo-item-meta">
+            <span
+              className={`todo-item-priority priority-${task.priority}`}
+            >
+              {PRIORITY_LABEL[task.priority]}
+            </span>
+            {task.dueDate && (
+              <span className="todo-item-due-date">
+                Vence: {formatDueDate(task.dueDate)}
+              </span>
+            )}
+          </div>
           <p className="todo-item-status">
             {isTogglePending
               ? "Guardando..."

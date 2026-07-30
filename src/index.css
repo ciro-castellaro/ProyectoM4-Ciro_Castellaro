@@ -12,6 +12,12 @@
  */
 
 :root {
+  /* La app solo tiene tema oscuro: esto le dice al navegador que dibuje los
+     controles nativos (el ícono del selector de fecha, flechas de <select>,
+     scrollbars) para fondo oscuro. Sin esto, el ícono del date picker se
+     renderiza casi negro sobre el fondo oscuro y queda invisible. */
+  color-scheme: dark;
+
   /* Paleta futurista MateCode */
   --color-bg: #07111f;
   --color-surface: #0d1b2a;
@@ -155,7 +161,8 @@ button:disabled {
 }
 
 input,
-textarea {
+textarea,
+select {
   font-family: inherit;
   font-size: 1rem;
   min-height: 44px;
@@ -179,7 +186,8 @@ textarea::placeholder {
 }
 
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible {
   border-color: var(--color-focus);
 }
 

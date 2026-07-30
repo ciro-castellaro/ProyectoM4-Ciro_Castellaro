@@ -37,6 +37,8 @@ describe("createTask", () => {
     const result = await createTask("user-1", {
       title: "Comprar leche",
       description: "1 litro",
+      priority: "medium",
+      dueDate: null,
     });
 
     expect(result.ok).toBe(true);
@@ -46,13 +48,20 @@ describe("createTask", () => {
       expect(result.value.title).toBe("Comprar leche");
       expect(result.value.description).toBe("1 litro");
       expect(result.value.completed).toBe(false);
+      expect(result.value.priority).toBe("medium");
+      expect(result.value.dueDate).toBeNull();
     }
   });
 
   it("le pasa a Firestore los campos mínimos que exigen las reglas de seguridad", async () => {
     vi.mocked(addDoc).mockResolvedValue({ id: "doc-123" } as never);
 
-    await createTask("user-1", { title: "Comprar leche", description: "" });
+    await createTask("user-1", {
+      title: "Comprar leche",
+      description: "",
+      priority: "medium",
+      dueDate: null,
+    });
 
     expect(addDoc).toHaveBeenCalledWith(
       expect.anything(),
@@ -60,6 +69,26 @@ describe("createTask", () => {
         userId: "user-1",
         title: "Comprar leche",
         completed: false,
+        priority: "medium",
+      }),
+    );
+  });
+
+  it("le pasa a Firestore la prioridad y la fecha de vencimiento elegidas", async () => {
+    vi.mocked(addDoc).mockResolvedValue({ id: "doc-123" } as never);
+
+    await createTask("user-1", {
+      title: "Comprar leche",
+      description: "",
+      priority: "high",
+      dueDate: "2026-03-15",
+    });
+
+    expect(addDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        priority: "high",
+        dueDate: "2026-03-15",
       }),
     );
   });
@@ -72,6 +101,8 @@ describe("createTask", () => {
     const result = await createTask("user-1", {
       title: "Comprar leche",
       description: "",
+      priority: "medium",
+      dueDate: null,
     });
 
     expect(result).toEqual({
@@ -156,6 +187,21 @@ describe("updateTask", () => {
       (changes as unknown as Record<string, unknown>).updatedAt,
     ).toBeInstanceOf(
       Timestamp,
+    );
+  });
+
+  it("permite actualizar la prioridad y la fecha de vencimiento", async () => {
+    vi.mocked(updateDoc).mockResolvedValue(undefined);
+
+    const result = await updateTask("task-1", {
+      priority: "high",
+      dueDate: "2026-03-15",
+    });
+
+    expect(result).toEqual({ ok: true, value: undefined });
+    expect(updateDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ priority: "high", dueDate: "2026-03-15" }),
     );
   });
 

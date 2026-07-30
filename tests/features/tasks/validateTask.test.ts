@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   validateTaskTitle,
   validateTaskDescription,
+  validateDueDate,
   TASK_TITLE_MAX_LENGTH,
   TASK_DESCRIPTION_MAX_LENGTH,
 } from "../../../src/features/tasks/validateTask";
@@ -61,5 +62,43 @@ describe("validateTaskDescription", () => {
     const result = validateTaskDescription(descripcionLarga);
 
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("validateDueDate", () => {
+  it("una fecha vacía es válida y se guarda como null (no tiene vencimiento)", () => {
+    const result = validateDueDate("");
+
+    expect(result).toEqual({ ok: true, value: null });
+  });
+
+  it("acepta una fecha válida y la devuelve tal cual, sin pasar por Date", () => {
+    const result = validateDueDate("2026-03-15");
+
+    expect(result).toEqual({ ok: true, value: "2026-03-15" });
+  });
+
+  it("rechaza un formato que no es YYYY-MM-DD", () => {
+    const result = validateDueDate("15/03/2026");
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("rechaza una fecha calendario inexistente", () => {
+    const result = validateDueDate("2026-02-30");
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("rechaza un 29 de febrero en un año no bisiesto", () => {
+    const result = validateDueDate("2026-02-29");
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("acepta el 29 de febrero en un año bisiesto", () => {
+    const result = validateDueDate("2028-02-29");
+
+    expect(result).toEqual({ ok: true, value: "2028-02-29" });
   });
 });

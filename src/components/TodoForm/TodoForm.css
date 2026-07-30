@@ -1,3 +1,19 @@
+.todo-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.todo-form-row .field {
+  flex: 1;
+}
+
+@media (min-width: 480px) {
+  .todo-form-row {
+    flex-direction: row;
+  }
+}
+
 .todo-form-actions {
   display: flex;
   flex-direction: column;

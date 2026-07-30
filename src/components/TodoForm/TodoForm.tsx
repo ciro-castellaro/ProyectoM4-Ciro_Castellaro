@@ -2,22 +2,29 @@ import { useState, type SubmitEvent } from "react";
 import {
   validateTaskTitle,
   validateTaskDescription,
+  validateDueDate,
 } from "../../features/tasks/validateTask";
 import type { Result } from "../../types/result";
+import type { TaskPriority } from "../../types/task";
 import "./TodoForm.css";
 
+interface TodoFormValues {
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  dueDate: string | null;
+}
+
 interface TodoFormProps {
-  onSubmit: (values: {
-    title: string;
-    description: string;
-  }) => Promise<Result<unknown>>;
+  onSubmit: (values: TodoFormValues) => Promise<Result<unknown>>;
   onCancel: () => void;
-  initialValues?: { title: string; description: string };
+  initialValues?: TodoFormValues;
 }
 
 interface FormErrors {
   title?: string;
   description?: string;
+  dueDate?: string;
 }
 
 function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
@@ -25,6 +32,10 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
   const [description, setDescription] = useState(
     initialValues?.description ?? "",
   );
+  const [priority, setPriority] = useState<TaskPriority>(
+    initialValues?.priority ?? "medium",
+  );
+  const [dueDate, setDueDate] = useState(initialValues?.dueDate ?? "");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -34,14 +45,16 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
 
     const titleResult = validateTaskTitle(title);
     const descriptionResult = validateTaskDescription(description);
+    const dueDateResult = validateDueDate(dueDate);
 
     setErrors({
       title: titleResult.ok ? undefined : titleResult.error,
       description: descriptionResult.ok ? undefined : descriptionResult.error,
+      dueDate: dueDateResult.ok ? undefined : dueDateResult.error,
     });
     setSubmitError(null);
 
-    if (!titleResult.ok || !descriptionResult.ok) {
+    if (!titleResult.ok || !descriptionResult.ok || !dueDateResult.ok) {
       return;
     }
 
@@ -49,6 +62,8 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
     const result = await onSubmit({
       title: titleResult.value,
       description: descriptionResult.value,
+      priority,
+      dueDate: dueDateResult.value,
     });
     setIsSubmitting(false);
 
@@ -59,6 +74,8 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
 
     setTitle("");
     setDescription("");
+    setPriority("medium");
+    setDueDate("");
   }
 
   return (
@@ -100,6 +117,44 @@ function TodoForm({ onSubmit, onCancel, initialValues }: TodoFormProps) {
             ⚠ {errors.description}
           </p>
         )}
+      </div>
+
+      <div className="todo-form-row">
+        <div className="field">
+          <label htmlFor="todo-priority">Prioridad</label>
+          <select
+            id="todo-priority"
+            value={priority}
+            onChange={(event) =>
+              setPriority(event.target.value as TaskPriority)
+            }
+            disabled={isSubmitting}
+          >
+            <option value="low">Baja</option>
+            <option value="medium">Media</option>
+            <option value="high">Alta</option>
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="todo-due-date">Fecha de vencimiento (opcional)</label>
+          <input
+            id="todo-due-date"
+            type="date"
+            value={dueDate}
+            onChange={(event) => setDueDate(event.target.value)}
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.dueDate)}
+            aria-describedby={
+              errors.dueDate ? "todo-due-date-error" : undefined
+            }
+          />
+          {errors.dueDate && (
+            <p id="todo-due-date-error" className="field-error" role="alert">
+              ⚠ {errors.dueDate}
+            </p>
+          )}
+        </div>
       </div>
 
       {submitError && (

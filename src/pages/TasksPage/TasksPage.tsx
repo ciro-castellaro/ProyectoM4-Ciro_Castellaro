@@ -8,11 +8,12 @@ import {
 } from "../../services/firebase/tasks";
 import { sendSummaryEmail } from "../../services/email/sendSummary";
 import { buildTaskSummary } from "../../features/tasks/buildTaskSummary";
-import type { TaskFilter } from "../../types/task";
+import type { TaskFilter, TaskPriority, TaskSortOption } from "../../types/task";
 import AppHeader from "../../components/AppHeader/AppHeader";
 import TodoForm from "../../components/TodoForm/TodoForm";
 import TodoList from "../../components/TodoList/TodoList";
 import TaskFilters from "../../components/TaskFilters/TaskFilters";
+import TaskSort from "../../components/TaskSort/TaskSort";
 import EmailSummary from "../../components/EmailSummary/EmailSummary";
 import "./TasksPage.css";
 
@@ -24,6 +25,7 @@ function TasksPage() {
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [filter, setFilter] = useState<TaskFilter>("all");
+  const [sortBy, setSortBy] = useState<TaskSortOption>("default");
 
   const tasks = tasksState.data ?? [];
   const pendingCount = tasks.filter((task) => !task.completed).length;
@@ -31,6 +33,8 @@ function TasksPage() {
   async function handleCreateTask(values: {
     title: string;
     description: string;
+    priority: TaskPriority;
+    dueDate: string | null;
   }) {
     if (!user) {
       return {
@@ -104,12 +108,19 @@ function TasksPage() {
 
   async function handleSaveEdit(
     id: string,
-    values: { title: string; description: string },
+    values: {
+      title: string;
+      description: string;
+      priority: TaskPriority;
+      dueDate: string | null;
+    },
   ) {
     setActionError(null);
     const result = await updateTask(id, {
       title: values.title,
       description: values.description,
+      priority: values.priority,
+      dueDate: values.dueDate,
     });
 
     if (result.ok) {
@@ -123,6 +134,8 @@ function TasksPage() {
                 ...task,
                 title: values.title,
                 description: values.description,
+                priority: values.priority,
+                dueDate: values.dueDate,
                 updatedAt: new Date().toISOString(),
               }
             : task,
@@ -188,12 +201,16 @@ function TasksPage() {
         )}
 
         {tasks.length > 0 && (
-          <TaskFilters value={filter} onChange={setFilter} />
+          <div className="tasks-controls">
+            <TaskFilters value={filter} onChange={setFilter} />
+            <TaskSort value={sortBy} onChange={setSortBy} />
+          </div>
         )}
 
         <TodoList
           tasksState={tasksState}
           filter={filter}
+          sortBy={sortBy}
           editingTaskId={editingTaskId}
           pendingTaskId={pendingTaskId}
           onToggleComplete={handleToggleComplete}

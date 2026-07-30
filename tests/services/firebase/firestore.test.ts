@@ -19,6 +19,8 @@ describe("taskFromDocument", () => {
       title: "Comprar leche",
       description: "Leche descremada, 1 litro",
       completed: false,
+      priority: "high",
+      dueDate: "2026-02-01",
       createdAt,
       updatedAt,
     });
@@ -31,9 +33,29 @@ describe("taskFromDocument", () => {
       title: "Comprar leche",
       description: "Leche descremada, 1 litro",
       completed: false,
+      priority: "high",
+      dueDate: "2026-02-01",
       createdAt: "2026-01-10T12:00:00.000Z",
       updatedAt: "2026-01-11T09:30:00.000Z",
     });
+  });
+
+  it("usa valores por defecto si el documento no tiene priority ni dueDate (tareas creadas antes de agregar estos campos)", () => {
+    const now = Timestamp.now();
+
+    const snapshot = createFakeSnapshot("task-old", {
+      userId: "user-abc",
+      title: "Tarea vieja",
+      description: "",
+      completed: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const task = taskFromDocument(snapshot);
+
+    expect(task.priority).toBe("medium");
+    expect(task.dueDate).toBeNull();
   });
 
   it("usa el id del documento de Firestore, no un campo interno", () => {

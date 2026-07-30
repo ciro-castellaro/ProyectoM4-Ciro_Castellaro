@@ -10,6 +10,8 @@ const task: Task = {
   title: "Comprar leche",
   description: "1 litro",
   completed: false,
+  priority: "medium",
+  dueDate: null,
   createdAt: "2026-01-10T12:00:00.000Z",
   updatedAt: "2026-01-10T12:00:00.000Z",
 };
@@ -35,6 +37,7 @@ describe("TodoList", () => {
       <TodoList
         tasksState={tasksState}
         filter="all"
+        sortBy="default"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -55,6 +58,7 @@ describe("TodoList", () => {
       <TodoList
         tasksState={tasksState}
         filter="all"
+        sortBy="default"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -77,6 +81,7 @@ describe("TodoList", () => {
       <TodoList
         tasksState={tasksState}
         filter="all"
+        sortBy="default"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -99,6 +104,7 @@ describe("TodoList", () => {
       <TodoList
         tasksState={tasksState}
         filter="all"
+        sortBy="default"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -124,6 +130,7 @@ describe("TodoList", () => {
         <TodoList
           tasksState={tasksState}
           filter="pending"
+          sortBy="default"
           editingTaskId={null}
           pendingTaskId={null}
           {...noopHandlers}
@@ -139,6 +146,7 @@ describe("TodoList", () => {
         <TodoList
           tasksState={tasksState}
           filter="completed"
+          sortBy="default"
           editingTaskId={null}
           pendingTaskId={null}
           {...noopHandlers}
@@ -160,6 +168,7 @@ describe("TodoList", () => {
         <TodoList
           tasksState={onlyPending}
           filter="completed"
+          sortBy="default"
           editingTaskId={null}
           pendingTaskId={null}
           {...noopHandlers}
@@ -170,6 +179,34 @@ describe("TodoList", () => {
       expect(
         screen.queryByRole("heading", { name: /todavía no tenés tareas/i }),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("orden", () => {
+    it("con 'priority' muestra primero las tareas de mayor prioridad", () => {
+      const tasksState: AsyncState<Task[]> = {
+        status: "success",
+        data: [
+          { ...task, id: "low", title: "Comprar leche", priority: "low" },
+          { ...task, id: "high", title: "Comprar pan", priority: "high" },
+        ],
+        error: null,
+      };
+
+      render(
+        <TodoList
+          tasksState={tasksState}
+          filter="all"
+          sortBy="priority"
+          editingTaskId={null}
+          pendingTaskId={null}
+          {...noopHandlers}
+        />,
+      );
+
+      const items = screen.getAllByRole("listitem");
+      expect(items[0]).toHaveTextContent("Comprar pan");
+      expect(items[1]).toHaveTextContent("Comprar leche");
     });
   });
 });

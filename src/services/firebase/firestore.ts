@@ -32,6 +32,10 @@ export function taskFromDocument(
     title: data.title,
     description: data.description,
     completed: data.completed,
+    // `?? ...`: tareas creadas antes de agregar estos campos no los tienen
+    // en Firestore, aunque el tipo `TaskDocumentData` diga que sí.
+    priority: data.priority ?? "medium",
+    dueDate: data.dueDate ?? null,
     createdAt: data.createdAt.toDate().toISOString(),
     updatedAt: data.updatedAt.toDate().toISOString(),
   };

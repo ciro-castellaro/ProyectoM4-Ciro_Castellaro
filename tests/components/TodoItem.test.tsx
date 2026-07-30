@@ -10,6 +10,8 @@ const baseTask: Task = {
   title: "Comprar leche",
   description: "1 litro, descremada",
   completed: false,
+  priority: "medium",
+  dueDate: null,
   createdAt: "2026-01-10T12:00:00.000Z",
   updatedAt: "2026-01-10T12:00:00.000Z",
 };
@@ -36,6 +38,57 @@ describe("TodoItem", () => {
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();
     expect(screen.getByText("1 litro, descremada")).toBeInTheDocument();
     expect(screen.getByText("Pendiente")).toBeInTheDocument();
+  });
+
+  it("muestra la prioridad de la tarea", () => {
+    render(
+      <TodoItem
+        task={{ ...baseTask, priority: "high" }}
+        isEditing={false}
+        isTogglePending={false}
+        onToggleComplete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onCancelEdit={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Alta")).toBeInTheDocument();
+  });
+
+  it("muestra la fecha de vencimiento cuando la tarea tiene una", () => {
+    render(
+      <TodoItem
+        task={{ ...baseTask, dueDate: "2026-03-15" }}
+        isEditing={false}
+        isTogglePending={false}
+        onToggleComplete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onCancelEdit={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Vence: 15/03/2026")).toBeInTheDocument();
+  });
+
+  it("no muestra fecha de vencimiento cuando la tarea no tiene una", () => {
+    render(
+      <TodoItem
+        task={baseTask}
+        isEditing={false}
+        isTogglePending={false}
+        onToggleComplete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onCancelEdit={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/vence:/i)).not.toBeInTheDocument();
   });
 
   it("muestra el estado completada cuando la tarea está completa", () => {
@@ -260,6 +313,8 @@ describe("TodoItem", () => {
     expect(handleSaveEdit).toHaveBeenCalledWith("task-1", {
       title: "Comprar pan",
       description: "1 litro, descremada",
+      priority: "medium",
+      dueDate: null,
     });
   });
 

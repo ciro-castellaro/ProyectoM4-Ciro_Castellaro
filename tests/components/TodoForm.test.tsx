@@ -43,6 +43,8 @@ describe("TodoForm", () => {
     expect(handleSubmit).toHaveBeenCalledWith({
       title: "Comprar leche",
       description: "1 litro",
+      priority: "medium",
+      dueDate: null,
     });
     await waitFor(() => {
       expect(screen.getByLabelText(/título/i)).toHaveValue("");
@@ -62,6 +64,8 @@ describe("TodoForm", () => {
     expect(handleSubmit).toHaveBeenCalledWith({
       title: "Comprar leche",
       description: "",
+      priority: "medium",
+      dueDate: null,
     });
   });
 
@@ -79,13 +83,56 @@ describe("TodoForm", () => {
       <TodoForm
         onSubmit={vi.fn()}
         onCancel={vi.fn()}
-        initialValues={{ title: "Comprar leche", description: "1 litro" }}
+        initialValues={{
+          title: "Comprar leche",
+          description: "1 litro",
+          priority: "high",
+          dueDate: "2026-03-15",
+        }}
       />,
     );
 
     expect(screen.getByLabelText(/título/i)).toHaveValue("Comprar leche");
     expect(screen.getByLabelText(/descripción/i)).toHaveValue("1 litro");
+    expect(screen.getByLabelText(/prioridad/i)).toHaveValue("high");
+    expect(screen.getByLabelText(/fecha de vencimiento/i)).toHaveValue(
+      "2026-03-15",
+    );
   });
+
+  it("permite elegir la prioridad y la incluye al enviar", async () => {
+    const handleSubmit = vi.fn().mockResolvedValue({ ok: true, value: undefined });
+    render(<TodoForm onSubmit={handleSubmit} onCancel={vi.fn()} />);
+
+    await userEvent.type(screen.getByLabelText(/título/i), "Comprar leche");
+    await userEvent.selectOptions(screen.getByLabelText(/prioridad/i), "high");
+    await userEvent.click(
+      screen.getByRole("button", { name: /guardar tarea/i }),
+    );
+
+    expect(handleSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ priority: "high" }),
+    );
+  });
+
+  it("acepta una fecha de vencimiento y la incluye al enviar", async () => {
+    const handleSubmit = vi.fn().mockResolvedValue({ ok: true, value: undefined });
+    render(<TodoForm onSubmit={handleSubmit} onCancel={vi.fn()} />);
+
+    await userEvent.type(screen.getByLabelText(/título/i), "Comprar leche");
+    await userEvent.type(
+      screen.getByLabelText(/fecha de vencimiento/i),
+      "2026-03-15",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /guardar tarea/i }),
+    );
+
+    expect(handleSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ dueDate: "2026-03-15" }),
+    );
+  });
+
 
   it("muestra un mensaje de carga mientras se guarda la tarea", async () => {
     let resolveSubmit!: (result: Result<unknown>) => void;

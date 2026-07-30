@@ -32,3 +32,34 @@ export function validateTaskDescription(description: string): Result<string> {
 
   return { ok: true, value: trimmed };
 }
+
+const DUE_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+// Devuelve la fecha como string "YYYY-MM-DD" (o null si vino vacía). Nunca
+// arma un `Date` a partir del string para no reintroducir el corrimiento de
+// un día por zona horaria; el `Date` que usa acá es solo para chequear que
+// la fecha exista de verdad (ej: rechazar 2026-02-30), no para guardarla.
+export function validateDueDate(dueDate: string): Result<string | null> {
+  const trimmed = dueDate.trim();
+
+  if (trimmed.length === 0) {
+    return { ok: true, value: null };
+  }
+
+  if (!DUE_DATE_REGEX.test(trimmed)) {
+    return { ok: false, error: "La fecha de vencimiento no es válida." };
+  }
+
+  const [year, month, day] = trimmed.split("-").map(Number);
+  const parsed = new Date(year, month - 1, day);
+  const isRealDate =
+    parsed.getFullYear() === year &&
+    parsed.getMonth() === month - 1 &&
+    parsed.getDate() === day;
+
+  if (!isRealDate) {
+    return { ok: false, error: "La fecha de vencimiento no es válida." };
+  }
+
+  return { ok: true, value: trimmed };
+}

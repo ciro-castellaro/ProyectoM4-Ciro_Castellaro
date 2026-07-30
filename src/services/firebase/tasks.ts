@@ -15,7 +15,12 @@ import type { Result } from "../../types/result";
 
 export async function createTask(
   userId: string,
-  values: { title: string; description: string },
+  values: {
+    title: string;
+    description: string;
+    priority: Task["priority"];
+    dueDate: string | null;
+  },
 ): Promise<Result<Task>> {
   try {
     const now = Timestamp.now();
@@ -24,6 +29,8 @@ export async function createTask(
       title: values.title,
       description: values.description,
       completed: false,
+      priority: values.priority,
+      dueDate: values.dueDate,
       createdAt: now,
       updatedAt: now,
     });
@@ -36,6 +43,8 @@ export async function createTask(
         title: values.title,
         description: values.description,
         completed: false,
+        priority: values.priority,
+        dueDate: values.dueDate,
         createdAt: now.toDate().toISOString(),
         updatedAt: now.toDate().toISOString(),
       },
@@ -74,7 +83,9 @@ export async function getUserTasks(userId: string): Promise<Result<Task[]>> {
 // a Firestore para cada caso.
 export async function updateTask(
   taskId: string,
-  changes: Partial<Pick<Task, "title" | "description" | "completed">>,
+  changes: Partial<
+    Pick<Task, "title" | "description" | "completed" | "priority" | "dueDate">
+  >,
 ): Promise<Result<void>> {
   try {
     const taskRef = doc(db, TASKS_COLLECTION, taskId);
