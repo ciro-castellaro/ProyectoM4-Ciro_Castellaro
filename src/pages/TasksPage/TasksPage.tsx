@@ -4,10 +4,12 @@ import { useTasks } from "../../hooks/useTasks";
 import {
   createTask,
   updateTask,
+  updateTasksOrder,
   deleteTask,
 } from "../../services/firebase/tasks";
 import { sendSummaryEmail } from "../../services/email/sendSummary";
 import { buildTaskSummary } from "../../features/tasks/buildTaskSummary";
+import { reorderTasks } from "../../features/tasks/reorderTasks";
 import type { TaskFilter, TaskPriority, TaskSortOption } from "../../types/task";
 import AppHeader from "../../components/AppHeader/AppHeader";
 import TodoForm from "../../components/TodoForm/TodoForm";
@@ -147,6 +149,23 @@ function TasksPage() {
     return result;
   }
 
+  // Solo se pasa a TodoList como `onReorder` cuando el filtro es "all" y el
+  // orden es "default" (ver el JSX más abajo), así que acá `tasks` siempre
+  // es exactamente la lista visible al arrastrar: no hace falta filtrar ni
+  // ordenar de nuevo.
+  async function handleReorder(activeId: string, overId: string) {
+    const reordered = reorderTasks(tasks, activeId, overId);
+
+    setActionError(null);
+    const result = await updateTasksOrder(reordered);
+
+    if (result.ok) {
+      setTasksState((prev) => ({ ...prev, data: reordered }));
+    } else {
+      setActionError(result.error);
+    }
+  }
+
   async function handleSendSummary() {
     if (!user) {
       return {
@@ -222,6 +241,9 @@ function TasksPage() {
           onSaveEdit={handleSaveEdit}
           onCancelEdit={() => setEditingTaskId(null)}
           onCreateFirst={() => setIsCreating(true)}
+          onReorder={
+            filter === "all" && sortBy === "default" ? handleReorder : undefined
+          }
         />
 
         <EmailSummary

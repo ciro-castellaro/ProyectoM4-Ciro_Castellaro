@@ -26,6 +26,28 @@
   cursor: pointer;
 }
 
+.drag-handle {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.todo-item.dragging {
+  opacity: 0.6;
+  box-shadow: var(--shadow-card);
+}
+
 .todo-item-content {
   flex: 1;
   min-width: 0;

@@ -36,6 +36,10 @@ export function taskFromDocument(
     // en Firestore, aunque el tipo `TaskDocumentData` diga que sí.
     priority: data.priority ?? "medium",
     dueDate: data.dueDate ?? null,
+    // Tareas creadas antes de agregar orden manual no tienen `order`: se usa
+    // su fecha de creación como posición, así se preserva el orden que ya
+    // tenían (más nuevas primero) sin necesidad de migrar datos viejos.
+    order: data.order ?? data.createdAt.toMillis(),
     createdAt: data.createdAt.toDate().toISOString(),
     updatedAt: data.updatedAt.toDate().toISOString(),
   };

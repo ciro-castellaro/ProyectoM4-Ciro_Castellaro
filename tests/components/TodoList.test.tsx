@@ -12,6 +12,7 @@ const task: Task = {
   completed: false,
   priority: "medium",
   dueDate: null,
+  order: 1,
   createdAt: "2026-01-10T12:00:00.000Z",
   updatedAt: "2026-01-10T12:00:00.000Z",
 };
@@ -207,6 +208,49 @@ describe("TodoList", () => {
       const items = screen.getAllByRole("listitem");
       expect(items[0]).toHaveTextContent("Comprar pan");
       expect(items[1]).toHaveTextContent("Comprar leche");
+    });
+  });
+
+  describe("arrastre", () => {
+    const tasksState: AsyncState<Task[]> = {
+      status: "success",
+      data: [task, { ...task, id: "task-2", title: "Comprar pan" }],
+      error: null,
+    };
+
+    it("no muestra handles de arrastre si no se pasa onReorder", () => {
+      render(
+        <TodoList
+          tasksState={tasksState}
+          filter="all"
+          sortBy="default"
+          editingTaskId={null}
+          pendingTaskId={null}
+          {...noopHandlers}
+        />,
+      );
+
+      expect(
+        screen.queryByRole("button", { name: /reordenar/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("muestra un handle de arrastre por tarea cuando se pasa onReorder", () => {
+      render(
+        <TodoList
+          tasksState={tasksState}
+          filter="all"
+          sortBy="default"
+          editingTaskId={null}
+          pendingTaskId={null}
+          onReorder={vi.fn()}
+          {...noopHandlers}
+        />,
+      );
+
+      expect(
+        screen.getAllByRole("button", { name: /reordenar/i }),
+      ).toHaveLength(2);
     });
   });
 });

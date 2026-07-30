@@ -6,6 +6,7 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  writeBatch,
   Timestamp,
 } from "firebase/firestore";
 import { db, tasksCollection, taskFromDocument, TASKS_COLLECTION } from "./firestore";
@@ -24,6 +25,10 @@ export async function createTask(
 ): Promise<Result<Task>> {
   try {
     const now = Timestamp.now();
+    // Mismo valor que se usaría por defecto al leer una tarea vieja sin
+    // `order` (`createdAt` en milisegundos): así una tarea recién creada
+    // queda ordenada de forma consistente con las demás sin casos especiales.
+    const order = now.toMillis();
     const docRef = await addDoc(tasksCollection, {
       userId,
       title: values.title,
@@ -31,6 +36,7 @@ export async function createTask(
       completed: false,
       priority: values.priority,
       dueDate: values.dueDate,
+      order,
       createdAt: now,
       updatedAt: now,
     });
@@ -45,6 +51,7 @@ export async function createTask(
         completed: false,
         priority: values.priority,
         dueDate: values.dueDate,
+        order,
         createdAt: now.toDate().toISOString(),
         updatedAt: now.toDate().toISOString(),
       },
@@ -66,11 +73,14 @@ export async function getUserTasks(userId: string): Promise<Result<Task[]>> {
     );
     const snapshot = await getDocs(userTasksQuery);
 
-    // Se ordena en el cliente (más reciente primero) para no depender de un
-    // índice compuesto de Firestore solo para esto.
+    // Se ordena en el cliente (por `order` descendente: más alto primero) para
+    // no depender de un índice compuesto de Firestore solo para esto. Por
+    // defecto `order` coincide con la fecha de creación, así que sin
+    // reordenar a mano el resultado es el mismo de siempre (más reciente
+    // primero); al arrastrar una tarea, `order` pasa a reflejar el orden manual.
     const tasks = snapshot.docs
       .map((doc) => taskFromDocument(doc))
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      .sort((a, b) => b.order - a.order);
 
     return { ok: true, value: tasks };
   } catch (error) {
@@ -93,6 +103,30 @@ export async function updateTask(
       ...changes,
       updatedAt: Timestamp.now(),
     });
+
+    return { ok: true, value: undefined };
+  } catch (error) {
+    return { ok: false, error: getFirestoreErrorMessage(error) };
+  }
+}
+
+// Recibe las tareas ya en su nuevo orden visual (de arriba hacia abajo) y
+// reescribe el `order` de todas en un solo batch, de mayor a menor: la de
+// arriba queda con el valor más alto. Se reescriben todas de una porque el
+// arrastre solo está habilitado cuando se ven todas las tareas sin filtrar
+// (ver TodoList), así que siempre es la lista completa del usuario.
+export async function updateTasksOrder(tasks: Task[]): Promise<Result<void>> {
+  try {
+    const batch = writeBatch(db);
+    const now = Timestamp.now();
+    const base = now.toMillis();
+
+    tasks.forEach((task, index) => {
+      const taskRef = doc(db, TASKS_COLLECTION, task.id);
+      batch.update(taskRef, { order: base - index, updatedAt: now });
+    });
+
+    await batch.commit();
 
     return { ok: true, value: undefined };
   } catch (error) {

@@ -1,9 +1,24 @@
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { Task, TaskFilter, TaskPriority, TaskSortOption } from "../../types/task";
 import type { AsyncState } from "../../types/async";
 import type { Result } from "../../types/result";
 import { filterTasks } from "../../features/tasks/filterTasks";
 import { sortTasks } from "../../features/tasks/sortTasks";
 import TodoItem from "../TodoItem/TodoItem";
+import SortableTodoItem from "../SortableTodoItem/SortableTodoItem";
 import "./TodoList.css";
 
 interface TodoListProps {
@@ -26,6 +41,10 @@ interface TodoListProps {
   ) => Promise<Result<unknown>>;
   onCancelEdit: () => void;
   onCreateFirst: () => void;
+  // El arrastre manual solo tiene sentido mostrando todas las tareas sin
+  // ordenar por otro criterio: si hay un filtro o un orden calculado activos,
+  // esta prop no se pasa y la lista se renderiza sin drag & drop.
+  onReorder?: (activeId: string, overId: string) => void;
 }
 
 function TodoList({
@@ -40,7 +59,12 @@ function TodoList({
   onSaveEdit,
   onCancelEdit,
   onCreateFirst,
+  onReorder,
 }: TodoListProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   if (tasksState.status === "loading") {
     return (
       <p className="list-status" role="status">
@@ -90,22 +114,57 @@ function TodoList({
 
   const visibleTasks = sortTasks(filteredTasks, sortBy);
 
+  if (!onReorder) {
+    return (
+      <ul className="todo-list">
+        {visibleTasks.map((task) => (
+          <TodoItem
+            key={task.id}
+            task={task}
+            isEditing={editingTaskId === task.id}
+            isTogglePending={pendingTaskId === task.id}
+            onToggleComplete={onToggleComplete}
+            onDelete={onDelete}
+            onStartEdit={onStartEdit}
+            onSaveEdit={onSaveEdit}
+            onCancelEdit={onCancelEdit}
+          />
+        ))}
+      </ul>
+    );
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      onReorder?.(String(active.id), String(over.id));
+    }
+  }
+
   return (
-    <ul className="todo-list">
-      {visibleTasks.map((task) => (
-        <TodoItem
-          key={task.id}
-          task={task}
-          isEditing={editingTaskId === task.id}
-          isTogglePending={pendingTaskId === task.id}
-          onToggleComplete={onToggleComplete}
-          onDelete={onDelete}
-          onStartEdit={onStartEdit}
-          onSaveEdit={onSaveEdit}
-          onCancelEdit={onCancelEdit}
-        />
-      ))}
-    </ul>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext
+        items={visibleTasks.map((task) => task.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <ul className="todo-list">
+          {visibleTasks.map((task) => (
+            <SortableTodoItem
+              key={task.id}
+              task={task}
+              isEditing={editingTaskId === task.id}
+              isTogglePending={pendingTaskId === task.id}
+              onToggleComplete={onToggleComplete}
+              onDelete={onDelete}
+              onStartEdit={onStartEdit}
+              onSaveEdit={onSaveEdit}
+              onCancelEdit={onCancelEdit}
+            />
+          ))}
+        </ul>
+      </SortableContext>
+    </DndContext>
   );
 }
 

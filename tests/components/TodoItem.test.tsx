@@ -12,6 +12,7 @@ const baseTask: Task = {
   completed: false,
   priority: "medium",
   dueDate: null,
+  order: 1,
   createdAt: "2026-01-10T12:00:00.000Z",
   updatedAt: "2026-01-10T12:00:00.000Z",
 };
@@ -38,6 +39,55 @@ describe("TodoItem", () => {
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();
     expect(screen.getByText("1 litro, descremada")).toBeInTheDocument();
     expect(screen.getByText("Pendiente")).toBeInTheDocument();
+  });
+
+  it("no muestra el handle de arrastre si no se pasa la prop sortable", () => {
+    render(
+      <TodoItem
+        task={baseTask}
+        isEditing={false}
+        isTogglePending={false}
+        onToggleComplete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onCancelEdit={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /reordenar/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("muestra el handle de arrastre cuando se pasa sortable, con sus listeners", async () => {
+    const handlePointerDown = vi.fn();
+    render(
+      <TodoItem
+        task={baseTask}
+        isEditing={false}
+        isTogglePending={false}
+        onToggleComplete={vi.fn()}
+        onDelete={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onStartEdit={vi.fn()}
+        onSaveEdit={vi.fn().mockResolvedValue({ ok: true, value: undefined })}
+        onCancelEdit={vi.fn()}
+        sortable={{
+          setNodeRef: vi.fn(),
+          style: {},
+          isDragging: false,
+          attributes: { role: "button", tabIndex: 0 } as never,
+          listeners: { onPointerDown: handlePointerDown } as never,
+        }}
+      />,
+    );
+
+    const handle = screen.getByRole("button", {
+      name: /reordenar "comprar leche"/i,
+    });
+    await userEvent.pointer({ keys: "[MouseLeft>]", target: handle });
+
+    expect(handlePointerDown).toHaveBeenCalled();
   });
 
   it("muestra la prioridad de la tarea", () => {

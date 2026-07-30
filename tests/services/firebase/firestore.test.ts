@@ -21,6 +21,7 @@ describe("taskFromDocument", () => {
       completed: false,
       priority: "high",
       dueDate: "2026-02-01",
+      order: 42,
       createdAt,
       updatedAt,
     });
@@ -35,27 +36,29 @@ describe("taskFromDocument", () => {
       completed: false,
       priority: "high",
       dueDate: "2026-02-01",
+      order: 42,
       createdAt: "2026-01-10T12:00:00.000Z",
       updatedAt: "2026-01-11T09:30:00.000Z",
     });
   });
 
-  it("usa valores por defecto si el documento no tiene priority ni dueDate (tareas creadas antes de agregar estos campos)", () => {
-    const now = Timestamp.now();
+  it("usa valores por defecto si el documento no tiene priority, dueDate ni order (tareas creadas antes de agregar estos campos)", () => {
+    const createdAt = Timestamp.fromDate(new Date("2026-01-10T12:00:00.000Z"));
 
     const snapshot = createFakeSnapshot("task-old", {
       userId: "user-abc",
       title: "Tarea vieja",
       description: "",
       completed: false,
-      createdAt: now,
-      updatedAt: now,
+      createdAt,
+      updatedAt: createdAt,
     });
 
     const task = taskFromDocument(snapshot);
 
     expect(task.priority).toBe("medium");
     expect(task.dueDate).toBeNull();
+    expect(task.order).toBe(createdAt.toMillis());
   });
 
   it("usa el id del documento de Firestore, no un campo interno", () => {

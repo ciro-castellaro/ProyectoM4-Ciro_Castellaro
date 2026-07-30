@@ -1,12 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { addDoc, getDocs, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import {
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  writeBatch,
+  Timestamp,
+} from "firebase/firestore";
 import { FirebaseError } from "firebase/app";
 import {
   createTask,
   getUserTasks,
   updateTask,
+  updateTasksOrder,
   deleteTask,
 } from "../../../src/services/firebase/tasks";
+import type { Task } from "../../../src/types/task";
 
 vi.mock("firebase/firestore", async (importOriginal) => {
   const actual = await importOriginal<typeof import("firebase/firestore")>();
@@ -16,8 +25,24 @@ vi.mock("firebase/firestore", async (importOriginal) => {
     getDocs: vi.fn(),
     updateDoc: vi.fn(),
     deleteDoc: vi.fn(),
+    writeBatch: vi.fn(),
   };
 });
+
+function makeTask(id: string): Task {
+  return {
+    id,
+    userId: "user-1",
+    title: `Tarea ${id}`,
+    description: "",
+    completed: false,
+    priority: "medium",
+    dueDate: null,
+    order: 1,
+    createdAt: "2026-01-10T12:00:00.000Z",
+    updatedAt: "2026-01-10T12:00:00.000Z",
+  };
+}
 
 function createFakeQueryDocSnapshot(
   id: string,
@@ -211,6 +236,46 @@ describe("updateTask", () => {
     );
 
     const result = await updateTask("task-1", { completed: true });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "No tenés permiso para realizar esta acción.",
+    });
+  });
+});
+
+describe("updateTasksOrder", () => {
+  beforeEach(() => {
+    vi.mocked(writeBatch).mockReset();
+  });
+
+  it("reescribe el order de todas las tareas, de mayor a menor según su posición visual", async () => {
+    const update = vi.fn();
+    const commit = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(writeBatch).mockReturnValue({ update, commit } as never);
+
+    const tasks = [makeTask("a"), makeTask("b"), makeTask("c")];
+    const result = await updateTasksOrder(tasks);
+
+    expect(result).toEqual({ ok: true, value: undefined });
+    expect(update).toHaveBeenCalledTimes(3);
+
+    const orders = update.mock.calls.map(
+      ([, changes]) => (changes as { order: number }).order,
+    );
+    expect(orders[0]).toBeGreaterThan(orders[1]);
+    expect(orders[1]).toBeGreaterThan(orders[2]);
+    expect(commit).toHaveBeenCalledTimes(1);
+  });
+
+  it("devuelve un error comprensible si Firestore rechaza el batch", async () => {
+    const update = vi.fn();
+    const commit = vi
+      .fn()
+      .mockRejectedValue(new FirebaseError("permission-denied", "msg"));
+    vi.mocked(writeBatch).mockReturnValue({ update, commit } as never);
+
+    const result = await updateTasksOrder([makeTask("a")]);
 
     expect(result).toEqual({
       ok: false,

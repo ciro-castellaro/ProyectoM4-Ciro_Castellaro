@@ -11,6 +11,9 @@ export interface Task {
   // como string plano (no Date/Timestamp) para evitar corrimientos de un
   // día por zona horaria al mostrarla o compararla.
   dueDate: string | null
+  // Posición manual para el orden por arrastre (más alto = aparece primero).
+  // Nuevo, en milisegundos de cuándo se creó o se reordenó por última vez.
+  order: number
   createdAt: string
   updatedAt: string
 }

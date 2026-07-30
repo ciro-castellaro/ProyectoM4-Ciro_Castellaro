@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
+import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import TodoForm from "../TodoForm/TodoForm";
 import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
 import type { Task, TaskPriority } from "../../types/task";
 import type { Result } from "../../types/result";
 import "./TodoItem.css";
+
+interface TodoItemSortable {
+  setNodeRef: (node: HTMLElement | null) => void;
+  style: CSSProperties;
+  isDragging: boolean;
+  attributes: DraggableAttributes;
+  listeners: DraggableSyntheticListeners;
+}
 
 interface TodoItemProps {
   task: Task;
@@ -22,6 +31,9 @@ interface TodoItemProps {
     },
   ) => Promise<Result<unknown>>;
   onCancelEdit: () => void;
+  // Solo la pone TodoList cuando el arrastre manual está habilitado (ver
+  // SortableTodoItem); TodoItem no sabe nada de dnd-kit más allá de esta forma.
+  sortable?: TodoItemSortable;
 }
 
 const PRIORITY_LABEL: Record<TaskPriority, string> = {
@@ -46,6 +58,7 @@ function TodoItem({
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
+  sortable,
 }: TodoItemProps) {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,7 +78,7 @@ function TodoItem({
 
   if (isEditing) {
     return (
-      <li className="todo-item card">
+      <li className="todo-item card" ref={sortable?.setNodeRef} style={sortable?.style}>
         <h2>Editando tarea</h2>
         <TodoForm
           initialValues={{
@@ -82,8 +95,23 @@ function TodoItem({
   }
 
   return (
-    <li className={`todo-item card${task.completed ? " completed" : ""}`}>
+    <li
+      className={`todo-item card${task.completed ? " completed" : ""}${sortable?.isDragging ? " dragging" : ""}`}
+      ref={sortable?.setNodeRef}
+      style={sortable?.style}
+    >
       <div className="todo-item-main">
+        {sortable && (
+          <button
+            type="button"
+            className="drag-handle"
+            aria-label={`Reordenar "${task.title}"`}
+            {...sortable.attributes}
+            {...sortable.listeners}
+          >
+            ⠿
+          </button>
+        )}
         <input
           type="checkbox"
           checked={task.completed}

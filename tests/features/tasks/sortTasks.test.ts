@@ -10,6 +10,7 @@ const baseTask: Task = {
   completed: false,
   priority: "medium",
   dueDate: null,
+  order: 1,
   createdAt: "2026-01-10T12:00:00.000Z",
   updatedAt: "2026-01-10T12:00:00.000Z",
 };

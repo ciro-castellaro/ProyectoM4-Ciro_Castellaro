@@ -8,6 +8,7 @@ import {
   createTask as createTaskService,
   getUserTasks as getUserTasksService,
   updateTask as updateTaskService,
+  updateTasksOrder as updateTasksOrderService,
   deleteTask as deleteTaskService,
 } from "../../src/services/firebase/tasks";
 import { sendSummaryEmail as sendSummaryEmailService } from "../../src/services/email/sendSummary";
@@ -25,6 +26,7 @@ vi.mock("../../src/services/firebase/tasks", () => ({
   createTask: vi.fn(),
   getUserTasks: vi.fn(),
   updateTask: vi.fn(),
+  updateTasksOrder: vi.fn(),
   deleteTask: vi.fn(),
 }));
 
@@ -64,6 +66,7 @@ function renderTasksPage() {
       completed: false,
       priority: values.priority,
       dueDate: values.dueDate,
+      order: Date.now(),
       createdAt: "2026-01-10T12:00:00.000Z",
       updatedAt: "2026-01-10T12:00:00.000Z",
     };
@@ -86,6 +89,11 @@ function renderTasksPage() {
   vi.mocked(deleteTaskService).mockImplementation(async (taskId) => {
     fakeTasksDb = fakeTasksDb.filter((task) => task.id !== taskId);
     return { ok: true, value: undefined };
+  });
+
+  vi.mocked(updateTasksOrderService).mockResolvedValue({
+    ok: true,
+    value: undefined,
   });
 
   render(
@@ -112,6 +120,7 @@ describe("TasksPage", () => {
     vi.mocked(createTaskService).mockReset();
     vi.mocked(getUserTasksService).mockReset();
     vi.mocked(updateTaskService).mockReset();
+    vi.mocked(updateTasksOrderService).mockReset();
     vi.mocked(deleteTaskService).mockReset();
     vi.mocked(sendSummaryEmailService).mockReset();
   });
@@ -492,6 +501,46 @@ describe("TasksPage", () => {
     const items = screen.getAllByRole("listitem");
     expect(items[0]).toHaveTextContent("Comprar leche");
     expect(items[1]).toHaveTextContent("Lavar el auto");
+  });
+
+  it("muestra handles de arrastre con el filtro 'Todas' y el orden 'Más recientes' (los valores por defecto)", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+    await createTaskInUI("Lavar el auto");
+
+    expect(
+      screen.getAllByRole("button", { name: /reordenar/i }),
+    ).toHaveLength(2);
+  });
+
+  it("oculta los handles de arrastre si hay un filtro distinto de 'Todas'", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Pendientes" }),
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /reordenar/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("oculta los handles de arrastre si el orden no es 'Más recientes'", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/ordenar por/i),
+      "priority",
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /reordenar/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("envía el resumen con el idToken del usuario y los contadores actuales", async () => {
