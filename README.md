@@ -128,6 +128,18 @@ direcciones verificadas manualmente en la consola de AWS (_Verified identities_)
 cualquier usuario registrado reciba su resumen sin verificación previa, hay que solicitar la
 salida del sandbox (_production access_) en la consola de AWS.
 
+## Funcionalidades adicionales
+
+Además del gestor de tareas básico (crear, editar, completar, eliminar) y el resumen por email, la
+aplicación incluye:
+
+- **Filtros de tareas**: ver todas, solo las pendientes o solo las completadas.
+- **Prioridad y fecha de vencimiento**: cada tarea puede tener una prioridad (baja, media o alta) y
+  una fecha de vencimiento opcional, y la lista se puede ordenar por cualquiera de los dos criterios.
+- **Reordenamiento manual (drag & drop)**: las tareas se pueden reordenar arrastrándolas, con
+  soporte de teclado y touch (`dnd-kit`), disponible cuando se están viendo todas las tareas sin un
+  orden calculado activo. El orden elegido se persiste en Firestore.
+
 ## Capturas de Pantalla
 
 **Login (desktop)**
@@ -136,7 +148,7 @@ salida del sandbox (_production access_) en la consola de AWS.
 
 **Mis tareas (desktop)**
 
-![Vista de tareas con el resumen por email en escritorio](screenshots/2.jpeg)
+![Vista de tareas en escritorio, con filtros, orden, prioridad, fecha de vencimiento y reordenamiento manual](screenshots/2.jpeg)
 
 **Login (mobile)**
 
@@ -144,7 +156,7 @@ salida del sandbox (_production access_) en la consola de AWS.
 
 **Mis tareas (mobile)**
 
-![Vista de tareas en mobile](screenshots/4.jpeg)
+![Vista de tareas en mobile, con filtros, orden, prioridad, fecha de vencimiento y reordenamiento manual](screenshots/4.jpeg)
 
 **Email de resumen recibido**
 
