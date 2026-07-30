@@ -1,11 +1,13 @@
-import type { Task } from "../../types/task";
+import type { Task, TaskFilter } from "../../types/task";
 import type { AsyncState } from "../../types/async";
 import type { Result } from "../../types/result";
+import { filterTasks } from "../../features/tasks/filterTasks";
 import TodoItem from "../TodoItem/TodoItem";
 import "./TodoList.css";
 
 interface TodoListProps {
   tasksState: AsyncState<Task[]>;
+  filter: TaskFilter;
   editingTaskId: string | null;
   pendingTaskId: string | null;
   onToggleComplete: (id: string) => void;
@@ -21,6 +23,7 @@ interface TodoListProps {
 
 function TodoList({
   tasksState,
+  filter,
   editingTaskId,
   pendingTaskId,
   onToggleComplete,
@@ -65,9 +68,21 @@ function TodoList({
     );
   }
 
+  const filteredTasks = filterTasks(tasks, filter);
+
+  if (filteredTasks.length === 0) {
+    return (
+      <p className="list-status" role="status">
+        {filter === "pending"
+          ? "No tenés tareas pendientes."
+          : "No tenés tareas completadas."}
+      </p>
+    );
+  }
+
   return (
     <ul className="todo-list">
-      {tasks.map((task) => (
+      {filteredTasks.map((task) => (
         <TodoItem
           key={task.id}
           task={task}

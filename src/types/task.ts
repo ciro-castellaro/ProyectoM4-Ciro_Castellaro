@@ -7,3 +7,5 @@ export interface Task {
   createdAt: string
   updatedAt: string
 }
+
+export type TaskFilter = "all" | "pending" | "completed"

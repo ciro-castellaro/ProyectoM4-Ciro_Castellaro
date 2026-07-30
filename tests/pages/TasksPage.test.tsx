@@ -394,6 +394,42 @@ describe("TasksPage", () => {
     expect(screen.getAllByLabelText(/título/i)).toHaveLength(1);
   });
 
+  it("no muestra los filtros cuando no hay tareas", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+
+    expect(
+      screen.queryByRole("group", { name: /filtrar tareas/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("filtra la lista de tareas al elegir 'Pendientes' o 'Completadas'", async () => {
+    renderTasksPage();
+    await screen.findByRole("heading", { name: /todavía no tenés tareas/i });
+    await createTaskInUI("Comprar leche");
+    await createTaskInUI("Lavar el auto");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await userEvent.click(checkboxes[0]);
+    await screen.findByText(/✓ completada/i);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Pendientes" }),
+    );
+    expect(screen.getByText("Comprar leche")).toBeInTheDocument();
+    expect(screen.queryByText("Lavar el auto")).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Completadas" }),
+    );
+    expect(screen.getByText("Lavar el auto")).toBeInTheDocument();
+    expect(screen.queryByText("Comprar leche")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Todas" }));
+    expect(screen.getByText("Comprar leche")).toBeInTheDocument();
+    expect(screen.getByText("Lavar el auto")).toBeInTheDocument();
+  });
+
   it("envía el resumen con el idToken del usuario y los contadores actuales", async () => {
     renderTasksPage();
     await screen.findByRole("heading", { name: /todavía no tenés tareas/i });

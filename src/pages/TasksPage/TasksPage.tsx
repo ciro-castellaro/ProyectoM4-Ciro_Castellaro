@@ -8,9 +8,11 @@ import {
 } from "../../services/firebase/tasks";
 import { sendSummaryEmail } from "../../services/email/sendSummary";
 import { buildTaskSummary } from "../../features/tasks/buildTaskSummary";
+import type { TaskFilter } from "../../types/task";
 import AppHeader from "../../components/AppHeader/AppHeader";
 import TodoForm from "../../components/TodoForm/TodoForm";
 import TodoList from "../../components/TodoList/TodoList";
+import TaskFilters from "../../components/TaskFilters/TaskFilters";
 import EmailSummary from "../../components/EmailSummary/EmailSummary";
 import "./TasksPage.css";
 
@@ -21,6 +23,7 @@ function TasksPage() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<TaskFilter>("all");
 
   const tasks = tasksState.data ?? [];
   const pendingCount = tasks.filter((task) => !task.completed).length;
@@ -184,8 +187,13 @@ function TasksPage() {
           </p>
         )}
 
+        {tasks.length > 0 && (
+          <TaskFilters value={filter} onChange={setFilter} />
+        )}
+
         <TodoList
           tasksState={tasksState}
+          filter={filter}
           editingTaskId={editingTaskId}
           pendingTaskId={pendingTaskId}
           onToggleComplete={handleToggleComplete}

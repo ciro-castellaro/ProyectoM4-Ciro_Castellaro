@@ -34,6 +34,7 @@ describe("TodoList", () => {
     render(
       <TodoList
         tasksState={tasksState}
+        filter="all"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -53,6 +54,7 @@ describe("TodoList", () => {
     render(
       <TodoList
         tasksState={tasksState}
+        filter="all"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -74,6 +76,7 @@ describe("TodoList", () => {
     render(
       <TodoList
         tasksState={tasksState}
+        filter="all"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -95,6 +98,7 @@ describe("TodoList", () => {
     render(
       <TodoList
         tasksState={tasksState}
+        filter="all"
         editingTaskId={null}
         pendingTaskId={null}
         {...noopHandlers}
@@ -103,5 +107,69 @@ describe("TodoList", () => {
 
     expect(screen.getByText("Comprar leche")).toBeInTheDocument();
     expect(screen.getByText("Comprar pan")).toBeInTheDocument();
+  });
+
+  describe("filtro", () => {
+    const tasksState: AsyncState<Task[]> = {
+      status: "success",
+      data: [
+        task,
+        { ...task, id: "task-2", title: "Comprar pan", completed: true },
+      ],
+      error: null,
+    };
+
+    it("con 'pending' muestra solo las tareas no completadas", () => {
+      render(
+        <TodoList
+          tasksState={tasksState}
+          filter="pending"
+          editingTaskId={null}
+          pendingTaskId={null}
+          {...noopHandlers}
+        />,
+      );
+
+      expect(screen.getByText("Comprar leche")).toBeInTheDocument();
+      expect(screen.queryByText("Comprar pan")).not.toBeInTheDocument();
+    });
+
+    it("con 'completed' muestra solo las tareas completadas", () => {
+      render(
+        <TodoList
+          tasksState={tasksState}
+          filter="completed"
+          editingTaskId={null}
+          pendingTaskId={null}
+          {...noopHandlers}
+        />,
+      );
+
+      expect(screen.getByText("Comprar pan")).toBeInTheDocument();
+      expect(screen.queryByText("Comprar leche")).not.toBeInTheDocument();
+    });
+
+    it("muestra un mensaje (no el estado vacío general) si ninguna tarea coincide con el filtro", () => {
+      const onlyPending: AsyncState<Task[]> = {
+        status: "success",
+        data: [task],
+        error: null,
+      };
+
+      render(
+        <TodoList
+          tasksState={onlyPending}
+          filter="completed"
+          editingTaskId={null}
+          pendingTaskId={null}
+          {...noopHandlers}
+        />,
+      );
+
+      expect(screen.getByText(/no tenés tareas completadas/i)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: /todavía no tenés tareas/i }),
+      ).not.toBeInTheDocument();
+    });
   });
 });
