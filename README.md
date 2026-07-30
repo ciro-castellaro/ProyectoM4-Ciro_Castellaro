@@ -3,17 +3,18 @@
 Aplicación web SPA de gestión de tareas para **MateCode**. Permite que empleados gestionen sus
 tareas diarias de forma organizada, persistente y accesible desde cualquier dispositivo.
 
-## Estado del proyecto
-
-En desarrollo incremental, por etapas.
+**App deployada:** https://matecode-todo.vercel.app
+**Uso de IA:** https://drive.google.com/drive/folders/1IxxSU3e7-I9HpKwgTkmpk5DwTncvxqY2?usp=sharing
 
 ## Tecnologías
 
-- Frontend: React + TypeScript (Vite)
-- Backend as a Service: Firebase Authentication y Cloud Firestore
-- Notificaciones por email: AWS SES, invocado desde una Vercel Function
+- Frontend: React 19.2.8 + TypeScript 6.0.3 (Vite 8.1.5), React Router 7.18.1
+- Backend as a Service: Firebase 12.16.0 (Authentication y Cloud Firestore, cliente),
+  firebase-admin 13.10.0 (servidor)
+- Notificaciones por email: AWS SES (`@aws-sdk/client-ses` 3.1096.0), invocado desde una Vercel
+  Function
 - Deploy: Vercel
-- Testing: Vitest y React Testing Library
+- Testing: Vitest 4.1.10 y React Testing Library 16.3.2
 
 ## Instalación
 
@@ -50,11 +51,11 @@ Completá el `.env` con tus propios valores (ver [Variables de entorno](#variabl
 | `VITE_FIREBASE_APP_ID`              | ID de la app dentro del proyecto Firebase.                                                         |
 | `FIREBASE_ADMIN_PROJECT_ID`         | Service account de Firebase (solo servidor), usada por la Vercel Function para verificar sesiones. |
 | `FIREBASE_ADMIN_CLIENT_EMAIL`       | Email de la service account (consola de Firebase → Cuentas de servicio).                           |
-| `FIREBASE_ADMIN_PRIVATE_KEY`        | Clave privada de la service account. Nunca lleva el prefijo `VITE_`: no debe llegar al cliente.     |
+| `FIREBASE_ADMIN_PRIVATE_KEY`        | Clave privada de la service account. Nunca lleva el prefijo `VITE_`: no debe llegar al cliente.    |
 | `SES_REGION`                        | Región de AWS donde está habilitado SES (nombre propio, no `AWS_REGION`: ver nota abajo).          |
-| `SES_ACCESS_KEY_ID`                  | Access key de un usuario IAM con permisos mínimos (solo enviar emails vía SES).                    |
-| `SES_SECRET_ACCESS_KEY`              | Secret key del mismo usuario IAM. Nunca debe llegar al cliente.                                    |
-| `SES_SENDER_EMAIL`                   | Identidad (email) verificada en SES desde la que se envía el resumen.                              |
+| `SES_ACCESS_KEY_ID`                 | Access key de un usuario IAM con permisos mínimos (solo enviar emails vía SES).                    |
+| `SES_SECRET_ACCESS_KEY`             | Secret key del mismo usuario IAM. Nunca debe llegar al cliente.                                    |
+| `SES_SENDER_EMAIL`                  | Identidad (email) verificada en SES desde la que se envía el resumen.                              |
 
 > Nota: los valores de Firebase de arriba son configuración pública del cliente (quedan visibles
 > en el bundle de JS), no secretos de servidor. Se mantienen en `.env` de todos modos como buena
@@ -71,28 +72,33 @@ Completá el `.env` con tus propios valores (ver [Variables de entorno](#variabl
 
 ## Arquitectura
 
-El código se organiza en capas con responsabilidades separadas:
+```
+src/
+├─ pages/              # Vistas completas (Login, Register, Tasks)
+├─ components/         # Componentes de UI reutilizables (TodoForm, TodoList, ConfirmDialog, etc.)
+├─ features/           # Lógica de dominio pura, sin UI ni red (validateAuth, validateTask, buildTaskSummary)
+├─ services/           # Integraciones externas (Firebase Auth/Firestore, fetch al endpoint de email)
+├─ routes/             # React Router y protección de rutas privadas (ProtectedRoute)
+├─ hooks/              # Estado de dominio reutilizable (useAuth, useTasks)
+├─ types/              # Contratos de datos compartidos (Result<T>, Task, SendSummaryRequest, ...)
+└─ utils/              # Helpers generales
 
-- `src/pages/` — pantallas completas (login, registro, tareas); arman la página a partir de
-  componentes y hooks.
-- `src/components/` — piezas de UI reutilizables con una única responsabilidad (formularios, lista
-  de tareas, encabezado, modal de confirmación, resumen por email).
-- `src/hooks/` — estado de dominio reutilizable entre componentes (`useAuth`, `useTasks`).
-- `src/features/` — lógica de validación pura, sin dependencias de UI ni de red (`validateAuth`,
-  `validateTask`, `buildTaskSummary`).
-- `src/services/` — integraciones con servicios externos (Firebase Authentication, Cloud
-  Firestore, el fetch al endpoint de email). Es la única capa que conoce los SDKs externos.
-- `src/routes/` — configuración de React Router y protección de rutas privadas.
-- `src/types/` — contratos de datos compartidos, incluido `Result<T>` (usado en todo el proyecto,
-  frontend y backend, para modelar éxito/error de forma explícita en vez de con excepciones) y los
-  tipos que comparten el frontend con la Vercel Function (`SendSummaryRequest`,
-  `SendSummaryResponse`).
-- `api/` — el único punto de entrada de las Vercel Functions. Se mantiene deliberadamente delgado:
-  solo valida el método HTTP y orquesta las llamadas a `server/`.
-- `server/` — lógica de servidor compartida (verificación del `idToken`, validación del body,
-  armado del email, envío por SES). Vive fuera de `api/` a propósito: Vercel trata cada archivo
-  dentro de `api/` como un endpoint público, así que separarla evita crear rutas HTTP
-  involuntarias.
+api/                   # Vercel Functions: cada archivo acá es un endpoint público (solo glue HTTP)
+server/                # Lógica de servidor compartida (verificar idToken, armar y enviar el email
+                        # por SES); vive fuera de api/ para no quedar expuesta como endpoint
+
+tests/                 # Tests unitarios y de componentes, con mocks de Firebase/AWS SES
+
+.env                   # Local, nunca se sube (ver .gitignore)
+.env.example           # Plantilla sin secretos, sí se sube
+.gitignore             # Excluye .env
+README.md              # Este archivo
+```
+
+> El plan original agrupaba las Vercel Functions bajo `functions/`, pero Vercel solo reconoce como
+> endpoint lo que está en `api/` — por eso ese directorio se mantiene deliberadamente delgado (solo
+> valida el método HTTP y orquesta llamadas a `server/`), y toda la lógica compartida se separó a
+> `server/` para que Vercel no la trate como una ruta pública más.
 
 Todas las capas usan el mismo tipo `Result<T>` (`{ ok: true; value: T } | { ok: false; error:
 string }`) para propagar errores de forma explícita y tipada: el compilador obliga a manejar el
@@ -116,27 +122,29 @@ caso de error en cada punto donde se consume un resultado.
    mensaje genérico y seguro antes de llegar al cliente (`getSesErrorMessage`); el detalle real
    solo queda en los logs del servidor.
 
-**Nota operativa:** mientras la cuenta de AWS SES esté en modo *sandbox*, solo se puede enviar a
-direcciones verificadas manualmente en la consola de AWS (*Verified identities*). Para que
+**Nota operativa:** mientras la cuenta de AWS SES esté en modo _sandbox_, solo se puede enviar a
+direcciones verificadas manualmente en la consola de AWS (_Verified identities_). Para que
 cualquier usuario registrado reciba su resumen sin verificación previa, hay que solicitar la
-salida del sandbox (*production access*) en la consola de AWS.
+salida del sandbox (_production access_) en la consola de AWS.
 
-## Uso de IA en este proyecto
+## Capturas de Pantalla
 
-El desarrollo se hizo con Claude Code como asistente, siguiendo estos principios:
+**Login (desktop)**
 
-- El proyecto se construyó en etapas pequeñas y secuenciales; cada una se implementó, se explicó y
-  se confirmó antes de pasar a la siguiente.
-- El código propuesto por la IA se revisó y se adaptó al proyecto — no se copiaron soluciones sin
-  entenderlas.
-- Los commits se hacen exclusivamente con la autoría de Ciro Castellaro; la IA nunca figura como
-  colaboradora ni coautora.
-- Nunca se subieron secretos al repositorio: las claves de Firebase, AWS y Vercel viven solo en
-  `.env` (ignorado por Git) y en la configuración de entorno de Vercel.
+![Login en escritorio](screenshots/1.jpeg)
 
-El detalle etapa por etapa (qué se hizo, por qué se usó la IA en cada caso y qué se revisó) se
-registra en `LOGS M4/uso-de-IA.md`, fuera de este repositorio.
+**Mis tareas (desktop)**
 
-## Deploy
+![Vista de tareas con el resumen por email en escritorio](screenshots/2.jpeg)
 
-_Pendiente — URL de producción se agregará al desplegar la aplicación._
+**Login (mobile)**
+
+![Login en mobile](screenshots/3.jpeg)
+
+**Mis tareas (mobile)**
+
+![Vista de tareas en mobile](screenshots/4.jpeg)
+
+**Email de resumen recibido**
+
+![Email de resumen de tareas recibido en la bandeja de entrada](screenshots/5.jpeg)
